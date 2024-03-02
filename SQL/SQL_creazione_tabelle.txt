@@ -1,0 +1,77 @@
+CREATE TABLE Cliente(
+ID int NOT NULL PRIMARY KEY,
+Indirizzo varchar(20) NOT NULL,
+Tel int NOT NULL,
+PersonaDiRiferimento varchar(20) NOT NULL,
+NumeroDiRichieste int NOT NULL);
+
+CREATE TABLE Tecnico(
+CF varchar(16) PRIMARY KEY);
+
+CREATE TABLE Competenza(
+Campo varchar(20) PRIMARY KEY);
+
+CREATE TABLE Richiesta(
+nPratica int PRIMARY KEY,
+TipoProblema varchar(20) NOT NULL,
+Cliente int NOT NULL,
+SistemaInteressato varchar(20) NOT NULL,
+NumeroDiInterventi int NOT NULL,
+CONSTRAINT fk_tipoProblema FOREIGN KEY (TipoProblema) REFERENCES Competenza(Campo),
+CONSTRAINT fk_cliente FOREIGN KEY (Cliente) REFERENCES Cliente(ID));
+
+CREATE TABLE Intervento(
+Richiesta int NOT NULL,
+nIntervento int NOT NULL,
+Data DATE NOT NULL,
+Durata interval NOT NULL,
+TelCliente int NOT NULL,
+PRIMARY KEY(Richiesta, nIntervento),
+CONSTRAINT fk_richiesta FOREIGN KEY (Richiesta) REFERENCES Richiesta(nPratica));
+
+CREATE TABLE RegistroInterventi(
+Tecnico varchar(16) NOT NULL,
+Richiesta int NOT NULL,
+Intervento int NOT NULL,
+PRIMARY KEY (Tecnico, Richiesta, Intervento),
+CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) REFERENCES Tecnico(CF),
+CONSTRAINt fk_richiesta_intervento FOREIGN KEY (Richiesta, Intervento) REFERENCES Intervento(Richiesta, nIntervento));
+
+CREATE TABLE Possiede(
+Tecnico varchar(16) NOT NULL,
+Competenza varchar(20) NOT NULL,
+PRIMARY KEY (Tecnico, Competenza),
+CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) REFERENCES Tecnico(CF),
+CONSTRAINT fk_competenza FOREIGN KEY (Competenza) REFERENCES Competenza(Campo));
+
+CREATE or REPLACE FUNCTION update_numeroDiInterventi()
+RETURNS TRIGGER
+language plpgsql as $$
+	begin
+	
+	SET newValue int = (SELECT NumeroDiInterventi FROM Richiesta WHERE nPratica = new.Richiesta) + 1
+	UPDATE Richiesta SET NumeroDiInterventi = newValue
+	return new;
+	end;
+$$;
+
+CREATE OR REPLACE FUNCTION update_numeroDiRichieste()
+RETURN TRIGGER
+language plpgsql as $$
+	begin
+	SET @newValue = (SELECT NumeroDiRichieste FROM Cliente WHERE ID = new.Cliente) + 1
+	UPDATE Cliente SET NumeroDiRichieste = @newValue
+	return new;
+	end;
+$$;
+
+CREATE TRIGGER update_counter()
+AFTER INSERT ON Intervento
+for each row
+execute procedure update_numeroDiInterventi();
+
+CREATE TRIGGER update_counter()
+AFTER INSERT ON Richiesta
+for each row
+execute procedure update_numeroDiInterventi
+

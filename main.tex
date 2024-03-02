@@ -1,0 +1,782 @@
+ \documentclass{article}
+\usepackage[italian]{babel}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+\usepackage{adjustbox} % Pacchetto per controllare le dimensioni degli oggetti
+\usepackage{graphicx} % Required for inserting images
+\usepackage[inkscapeformat=png]{svg}
+\usepackage{indentfirst}
+\usepackage{stackengine}
+\usepackage[document]{ragged2e}
+\usepackage{float}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\usepackage{hyperref} % Per rendere l'indice interagibile
+
+
+
+\title{Relazione progetto di laboratorio \\ Basi di dati - A.A. 2023/2024}
+
+\author{
+    Chierchia Kevin\ -
+	\texttt{147798}\ -
+	{chierchia.kevin@spes.uniud.it}
+    \and
+	Ndoye Ibrahime\ -
+	\texttt{150340}\ -
+	{ndoye.ibrahime@spes.uniud.it}
+	\and
+	Moreno Scozzi\ -
+	\texttt{153007}\ -
+	{scozzi.moreno@spes.uniud.it}
+	}
+
+
+\begin{document}
+\setlength{\parindent}{25pt}
+\setlength{\parskip}{5pt}
+\graphicspath{{./img/}}
+\maketitle
+{
+    \newpage
+    \hypersetup{linkcolor=black}
+    \tableofcontents
+}
+
+\newpage
+
+\section{Introduzione}
+
+Il presente elaborato espone l’attività di progettazione e implementazione di una Base di Dati relazionale, con una
+successiva analisi dei dati sperimentali in essa contenuti tramite apposite interrogazioni in linguaggio SQL. \\
+Di seguito elencheremo i file creati durante lo sviluppo del progetto per la creazione di database. \\
+
+\section{Analisi dei requisiti}
+
+\subsection{Requisiti}
+
+Si vuole progettare una base di dati di supporto alla gestione degli interventi di assistenza clienti effettuati da un’azienda che opera nell’ambito degli impianti di riscaldamento.\\
+
+\noindent\fbox{%
+    \setlength{\fboxrule}{0.1pt}
+    \parbox{\textwidth}{%
+        \begin{itemize}
+            \item L’azienda possiede un certo numero di \textbf{\underline{clienti}}, appartenenti a diverse categorie (\underline{aziende}, \underline{enti pubblici}, \underline{singoli cittadini}, ..). 
+            Di ogni \underline{cliente}, identificato da uno specifico codice, l’azienda possiede indirizzo, recapito telefonico ed estremi della persona di riferimento.
+            
+            \item Ogni \underline{cliente} può formulare una \textbf{\underline{richiesta}} di assistenza attraverso appositi moduli disponibili on-line. Ogni \underline{richiesta} è identificata univocamente da un codice numerico generato automaticamente dal sistema. In ogni \underline{richiesta}, il \underline{cliente} deve specificare il sistema per il quale richiede l’intervento di assistenza e la tipologia del problema (scegliendola in un insieme predefinito di tipologie).
+            
+            \item Ad ogni \underline{richiesta} di assistenza da parte di un \underline{cliente}, corrispondono uno o più \textbf{\underline{interventi}} di assistenza da parte dell’azienda. Ogni \underline{intervento} relativo ad una data \underline{richiesta} è identificato da un numero progressivo (intervento 1 relativo alla richiesta 734, intervento 2 relativo alla richiesta 734, ..). Gli \underline{interventi} possono essere svolti sia \underline{in remoto} (il \underline{cliente} viene contattato telefonicamente e il problema viene risolto attraverso tale interazione) o \underline{presso la sede} del \underline{cliente}. Di ogni \underline{intervento} vengono registrati il giorno in cui ha luogo (si assume che ogni \underline{intervento} venga eseguito in giornata) e la durata.
+            
+            \item Ogni \underline{intervento} viene effettuato da un \textbf{\underline{tecnico}} dell’azienda. Se una \underline{richiesta} di assistenza comporta l’esecuzione di più \underline{interventi}, questi possono essere svolti da \underline{tecnici} diversi. Ogni \underline{tecnico} è identificato univocamente dal suo codice fiscale. Per ogni \underline{tecnico} vengono specificate le tipologie di problemi che è in grado di risolvere (tali tipologie appartengono ad un insieme predefinito di possibili tipologie). L’esecuzione di un \underline{intervento} relativo ad una data \underline{richiesta} deve ovviamente essere assegnata ad un \underline{tecnico} che ha le competenze necessarie (corrispondenza tra tipologia del problema specificata nella \underline{richiesta} e tipologie di problemi per i quali il \underline{tecnico} ha le competenze necessarie).
+
+        \end{itemize}
+    }%
+}
+
+Il \textbf{dominio applicativo} della base di dati è l'\textbf{azienda} di impianti di riscaldamento.
+
+
+\subsection{Glossario}
+
+La traccia assegnata contiene i seguenti termini appartenenti al dominio di interesse relativo a un'azienda di impianti di riscaldamento:
+
+\begin{table}[h!]
+    \centering
+    \begin{adjustbox}{width=1\textwidth}
+        \begin{tabular}{|c|c|c|c|}
+            \hline &&& \\ 
+            \textbf{Termine} & \textbf{Descrizione} & \textbf{Attributi} & \textbf{Collegamenti} \\ &&& \\ 
+            \hline &&& \\ 
+            Cliente & Persona che richiede interventi di assistenza. & \underline{\textbf{ID}}, indirizzo, telefono, persona di riferimento  & Richiesta \\ &&& \\
+            \hline &&& \\ 
+            Richiesta & Richiesta di intervento per la risoluzione di un problema. & \underline{\textbf{Codice}}, sistema interessato, tipo problema  & Cliente, Intervento\\ &&& \\ 
+            \hline &&& \\ 
+            Intervento & Azione di risoluzione del problema da parte di un tecnico. & \underline{\textbf{Richiesta, numero intervento}} & Richiesta, Tecnico\\ &&& \\ 
+            \hline &&& \\ 
+            Tecnico & Dipendente incaricato della risoluzione di un problema. & \underline{\textbf{CF}}, competenze & Intervento, Richiesta\\ &&& \\ 
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Glossario dei termini}
+    \label{tab:glossario}
+\end{table}
+
+\newpage
+
+\subsection{Ristesura e strutturazione dei requisiti}
+
+In seguito all'identificazione dei termini chiave, si raccolgono i requisiti espressi in linguaggio naturale in maniera più strutturata. Tale organizzazione può tornare utile in fase progettazione, nell'assegnamento delle responsabilità.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|m{17cm}|}
+        \hline
+        \begin{center} \textbf{Cliente} \end{center} \\
+        \hline
+        \begin{itemize}
+            \item appartenente a diverse categorie (aziende, enti pubblici, singoli cittadini, ..)
+            \item identificato da uno specifico codice, indirizzo, recapito telefonico, estremi della persona di riferimento (\textbf{nel caso in cui sia un'azienda})
+            \item può formulare richieste, per ognuna delle quali deve specificare il sistema per il quale richiede l'intervento e il tipo di problema
+        \end{itemize} \\
+        
+        \hline
+        \begin{center}\textbf{Richiesta}\end{center} \\
+        \hline
+        \begin{itemize}
+            \item identificata univocamente da un codice numerico
+            \item per ogni richiesta è specificato il sistema per il quale è richiesto l'intervento
+            \item ad ogni richiesta corrispondono uno o più interventi
+        \end{itemize} \\
+        
+        \hline
+        \begin{center}\textbf{Intervento}\end{center} \\
+        \hline
+        \begin{itemize}
+            \item identificato da un numero progressivo relativo alla richiesta che lo genera
+            \item possono essere svolti in remoto o in loco
+            \item di ogni intervento si registra il giorno e la durata
+            \item ad ogni intervento corrisponde un solo tecnico
+        \end{itemize} \\
+        
+        \hline
+        \begin{center}\textbf{Tecnico}\end{center} \\
+        \hline
+        \begin{itemize}
+            \item identificato dal suo codice fiscale
+            \item più tecnici possono essere coinvolti per un'unica richiesta (in caso di interventi multipli)
+            \item a un tecnico possono essere assegnati solo interventi la cui tipologia corrisponde alle sue competenze 
+        \end{itemize} \\
+        \hline
+    \end{tabular}
+    \caption{Requisiti strutturati}
+    \label{tab:op_freq}
+\end{table}
+
+\newpage
+
+\subsection{Operazioni sui dati}
+
+Individuati i requisiti, si descrivono ora le principali operazioni sui dati, con la rispettiva frequenza.
+Si ipotizza, per dare consistenza al conteggio, un'azienda con 100 clienti attivi, 5 tecnici e una stima di 20 guasti mensili con conseguenti richieste di interventi.
+
+\textbf{TODO: AGGIUNGERE OPERAZIONI MAN MANO CHE SE NE SCOPRONO}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|m{10cm} m{3cm}|}
+        \hline 
+        \textbf{Operazione} & \textbf{Frequenza} \\ 
+        
+        \hline & \\   
+        Inserimento di un nuovo Cliente & 10/mese \\&\\
+
+        Visualizzazione dei dettagli di un Cliente & 50/mese \\&\\
+        
+        Inserimento di una Richiesta & 20/mese \\&\\
+        
+        Visualizzazione dei dettagli di una Richiesta & 200/mese \\&\\
+
+        Inserimento di un Intervento & 40/mese \\&\\
+
+        Visualizzazione dei dettagli di un Intervento & 80/mese \\&\\
+
+        Visualizzazione dei dettagli di un Tecnico & 70/mese \\&\\
+
+        \hline
+    
+    \end{tabular}
+    \caption{Operazioni e frequenze}
+    \label{tab:my_label}
+\end{table}
+
+\subsubsection{Alcuni chiarimenti}
+
+L'elevata frequenza delle operazioni di visualizzazione di dettagli di Richiesta, Tecnico e Intervento è giustificata dal fatto che al fine ultimo di gestire le richieste e organizzare gli interventi, gli operatori che utilizzano l'applicazione che si interfaccia alla base di dati si trovino più volte ad accedere a tali dati, così come i tecnici per visualizzare i dettagli di una richiesta.
+\newpage
+
+\section{Progettazione concettuale}
+
+\subsection{Diagramma ER}
+Segue lo schema Entità-Relazione creato sulla base dei requisiti definiti precedentemente.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.25]{img/ER_base.png}
+    \label{fig:ER_Schema}
+\end{figure}
+
+\subsection{Vincoli}
+    \subsubsection{Vincoli di integrità}
+    Dalla consegna si evince un evidente vincolo di integrità \textbf{tra le entità Tecnico e Richiesta}: \\ al momento dell'inserimento di una richiesta, il cliente inserisce anche il \textbf{tipo ti problema} da risolvere. Tale campo può essere inserito con un insieme specifico di valori (ad esempio: \{elettrico, idraulico, ... \}), il quale è anche il \textbf{dominio del attributo 'campo competenze' di Tecnico}. \\ Dunque affinchè un intervento possa essere assegnato a uno specifico tecnico, \textbf{campo competenze di Tecnico e tipo problema di Richiesta devono combaciare}.
+    
+    \subsubsection{Regole di derivazione}
+    
+    Il diagramma presenta i seguenti attributi derivati:
+    \begin{enumerate}
+        \item \textbf{Numero di Richieste}: la somma di tutte le richieste effettuate da un cliente
+        \item \textbf{Numero di Interventi}: la somma di tutti gli interventi forniti da una richiesta
+        \item \textbf{disponibile} (Tecnico): un valore booleano che rappresenta la disponibilità del tecnico. È vero se il tecnico non è già impegnato in un altro intervento. Si deriva da data e durata di Intervento.
+        \item \textbf{tel. cliente} (Intervento remoto): si deriva dal numero di telefono del cliente.
+    \end{enumerate}
+
+\subsection{Alcune osservazioni}
+Sulla base delle specifiche dei requisiti, si evince che Intervento (entità debole) identificata univocamente da un numero sequenziale e dalla richiesta che lo ha fornito. Dunque la chiave primaria di intervento sarà proprio la coppia n.intervento, Richiesta.
+
+
+\section{Progettazione logica}
+
+\subsection{Analisi delle ridondanze}
+Al fine di decidere se mantenere o eliminare le ridondanze presenti nello schema Entità-Relazione proposto in precedenza, si definisce la tavola dei volumi di entità e relazioni.
+Consideriamo il caso della base di dati \underline{\textbf{dopo 3 anni di attività}}, ipotizzando uno stato iniziale, come detto al punto 2.4, di 100 clienti attivi, 5 tecnici e 20 guasti mensili. Si ipotizza inoltre che nell'arco dei 3 anni siano aumentati anche i tecnici (uno all'anno). 
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=1\textwidth}
+        \begin{tabular}{|m{5cm}|m{5cm}|m{3cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Volume} \\ 
+            \hline
+            Cliente & Entità & 460 \\ 
+            \hline
+            Richiesta & Entità & 720 \\
+            \hline
+            Intervento & Entità & 1440 \\
+            \hline
+            Tecnico & Entità & 8 \\
+            \hline
+            Effettua & Relazione & 720 \\
+            \hline
+            Fornisce & Relazione & 1440\\
+            \hline
+            è assegnato a & Relazione & 1440 \\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Volume dei dati}
+    \label{tab:volumedati}
+\end{table}
+
+\subsubsection{Attributi derivabili}
+
+Per come è stato definito il diagramma ER, sappiamo che sono presenti quattro attributi derivati: \\ \textbf{Numero di Richieste}, \textbf{Numero di Interventi}, \textbf{tel. cliente} e \textbf{disponibile}.\\
+Nei punti successivi verranno analizzati uno ad uno.
+
+\newpage
+
+\subsection{Attributo Numero di Richieste}
+
+La ridondanza introdotta dall'attributo Numero di Richiesta coinvolge principalmente due operazioni:
+\begin{enumerate}
+    \item \underline{Inserimento di una Richiesta}
+    \item \underline{Visualizzazione dei dettagli di un Cliente}
+\end{enumerate}
+
+\subsubsection{Tabelle degli accessi}
+
+Si producono le tabelle degli accessi delle operazioni indicate nel punto 4.2 con e senza ridondanza.
+
+\textbf{Con ridondanza}
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Richiesta & E & 1 & W\\
+            \hline
+            Effettua & R & 1 & W\\
+            \hline
+            Cliente & E & 1 & R\\
+            \hline
+            Cliente & E & 1 & W\\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per "Inserimento di una Richiesta" }
+    \label{tab:accesstable}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Cliente & E & 1 & R\\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per "Visualizzazione dei dettagli di un Cliente"}
+    \label{tab:accesstable}
+\end{table}
+
+\textbf{Senza ridondanza}
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Richiesta & E & 1 & W\\
+            \hline
+            Effettua & R & 1 & W\\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per "Inserimento di una Richiesta" }
+    \label{tab:accesstable}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Cliente & E & 1 & R\\
+            \hline
+            Effettua & R & 1,5 & R\\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per "Visualizzazione dei dettagli di un Cliente"}
+    \label{tab:accesstable}
+\end{table}
+
+\subsubsection{Analisi dei costi mensili}
+
+\begin{itemize}
+    \item \textbf{Con ridondanza}:
+    \begin{enumerate}
+        \item Inserimento di una Richiesta(20/mese): si hanno 60 accessi in scrittura e 20 in lettura, per un totale di \textbf{140} accessi.
+        \item Visualizzazione dei dettagli di un Cliente(50/mese): si hanno solo \textbf{50} accessi in lettura.
+    \end{enumerate}
+    \item \textbf{Senza ridondanza}:
+    \begin{enumerate}
+        \item Inserimento di una Richiesta(20/mese): si hanno 40 accessi in scrittura, per un totale di \textbf{80} accessi.
+        \item Visualizzazione dei dettagli di un Cliente(50/mese): si hanno solo \textbf{125} accessi in lettura.
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{Conclusioni}
+
+Nel caso con ridondanza si hanno 190 accessi contro 205 del caso senza ridondanza, risulta dunque conveniente mantenere l'attributo Numero di Richieste in Cliente.
+
+\newpage
+
+\subsection{Attributo Numero di Interventi}
+
+La ridondanza introdotta dall'attributo Numero di Interventi coinvolge invece due operazioni:
+\begin{enumerate}
+    \item \underline{Inserimento di un Intervento}
+    \item \underline{Visualizzazione dei dettagli di una Richiesta}
+\end{enumerate}
+
+\subsubsection{Tabelle degli accessi }
+In seguito le tabelle degli accessi per le operazioni sopracitate con e senza ridondanza.
+
+\textbf{Con ridondanza}
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Intervento & E & 1 & W\\
+            \hline
+            Fornisce & R & 1 & W\\
+            \hline
+            Richiesta & E & 1 & R\\
+            \hline
+            Richiesta & E & 1 & W\\
+            \hline            
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per Inserimento di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Richiesta & E & 1 & R\\
+            \hline            
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per Visualizzazione dei dettagli di una Richiesta}
+    \label{tab:accesstable}
+\end{table}
+
+\textbf{Senza ridondanza}
+
+\begin{table}[h]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Intervento & E & 1 & W\\
+            \hline
+            Fornisce & R & 1 & W\\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per Inserimento di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \begin{adjustbox}{width=0.6\textwidth}
+        \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+            \hline  
+            \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+            \hline
+            Richiesta & E & 1 & R\\
+            \hline
+            Fornisce & R & 2 & R\\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Tabella degli accessi per Visualizzazione dei dettagli di una Richiesta}
+    \label{tab:accesstable}
+\end{table}
+
+\subsubsection{Analisi dei costi mensili}
+
+\begin{itemize}
+    \item \textbf{Con ridondanza}:
+    \begin{enumerate}
+        \item \textbf{Inserimento di un Intervento}(40/mese): si hanno 120 accessi in scrittura e 40 accessi in lettura, per un totale di \textbf{280} accessi.
+        \item \textbf{Visualizzazione dei dettagli di una Richiesta}(200/mese): si hanno solo \textbf{200} accessi in lettura.
+    \end{enumerate}
+    \item \textbf{Senza ridondanza}:
+    \begin{enumerate}
+        \item \textbf{Inserimento di un Intervento}(40/mese): si hanno 80 accessi in scrittura per un totale di \textbf{160} accessi.
+        \item \textbf{Visualizzazione dei dettagli di una Richiesta}(200/mese): si hanno solo \textbf{600} accessi in lettura.
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{Conclusioni}
+
+Nel caso con ridondanza si hanno 480 accessi contro 760 del caso senza ridondanza, risulta dunque conveniente mantenere l'attributo Numero di Interventi in Richiesta.
+
+\subsection{Attributo tel. cliente}
+
+La ridondanza introdotta dall'attributo "tel. cliente" coinvolge principalmente 2 operazioni: 
+
+\begin{enumerate}
+    \item \underline{Inserimento di Intervento}
+    \item \underline{Visualizzazione dei dettagli di un Intervento} 
+\end{enumerate}
+
+\subsubsection{Tabelle degli accessi}
+
+In seguito le tabelle degli accessi per le operazioni sopracitate con e senza ridondanza.
+
+\textbf{Con ridondanza}\\
+Per chiarezza si aggiunge alla tabella degli accessi una colonna per discriminare gli accessi che sono inclusi nel normale inserimento senza l'attributo da quelli che servono solo al popolamento dell'attributo:
+    
+\begin{table}[h]
+    \centering
+        \begin{adjustbox}{width=0.8\textwidth}
+            \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|m{3cm}|}
+                \hline  
+                \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo} & \textbf{Note}\\ 
+                \hline
+                Intervento & E & 1 & W & Inserimento \\
+                \hline
+                Fornisce & R & 1 & W & Inserimento \\
+                \hline
+                Fornisce & R & 1 & R & Modifica attributo \\
+                \hline
+                Richiesta & E & 1 & R & Modifica attributo \\
+                \hline
+                Effettua & R & 1 & R & Modifica attributo \\
+                \hline
+                Cliente & E & 1 & R & Modifica attributo \\
+                \hline            
+                Intervento & E & 1 & W & Modifica attributo \\
+                \hline
+            \end{tabular}
+        \end{adjustbox}
+    \caption{Tabella degli accessi per Inserimento di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\begin{table}[h]
+    \centering
+        \begin{adjustbox}{width=0.6\textwidth}
+            \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+                \hline  
+                \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo}\\ 
+                \hline
+                Intervento & E & 1 & R\\
+                \hline
+            \end{tabular}
+        \end{adjustbox}
+    \caption{Tabella degli accessi per Visualizzazione dei dettagli di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\textbf{Senza ridondanza}
+
+\begin{table}[h]
+    \centering
+        \begin{adjustbox}{width=0.6\textwidth}
+            \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+                \hline  
+                \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo} \\ 
+                \hline
+                Intervento & E & 1 & W \\
+                \hline
+                Fornisce & R & 1 & W \\
+                \hline
+            \end{tabular}
+        \end{adjustbox}
+    \caption{Tabella degli accessi per Inserimento di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+        \begin{adjustbox}{width=0.6\textwidth}
+            \begin{tabular}{|m{2cm}|m{2cm}|m{2cm}|m{2cm}|}
+                \hline  
+                \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo} \\ 
+                \hline
+                Intervento & E & 1 & R \\
+                \hline
+                Fornisce & R & 1 & R \\
+                \hline
+                Richiesta & E & 1 & R \\
+                \hline
+                Effettua & R & 1 & R \\
+                \hline
+                Cliente & E & 1 & R \\
+                \hline
+            \end{tabular}
+        \end{adjustbox}
+    \caption{Tabella degli accessi per Visualizzazione dei dettagli di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\subsubsection{Analisi dei costi mensili}
+
+\begin{itemize}
+    \item \textbf{Con ridondanza}:
+    \begin{enumerate}
+        \item \textbf{Inserimento di un Intervento}(40/mese): si hanno 120 accessi in scrittura e 160 accessi in lettura, per un totale di \textbf{400} accessi.
+        \item \textbf{Visualizzazione dei dettagli di un Intervento}(80/mese): si hanno solo \textbf{80} accessi in lettura.
+    \end{enumerate}
+    \newpage
+    \item \textbf{Senza ridondanza}:
+    \begin{enumerate}
+        \item \textbf{Inserimento di un Intervento}(40/mese): si hanno 80 accessi in scrittura per un totale di \textbf{160} accessi.
+        \item \textbf{Visualizzazione dei dettagli di un Intervento}(80/mese): si hanno solo \textbf{400} accessi in lettura.
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{Conclusioni}
+
+Nel caso con ridondanza si hanno 480 accessi contro 560 del caso senza ridondanza, risulta dunque conveniente mantenere l'attributo tel. cliente in Intervento.
+
+\subsection{Attributo disponibile}
+
+L'attributo disponibile serve a riconoscere direttamente dalla tabella Tecnico quale tecnico è disponibile. In alternativa, senza tale ridondanza vi è la necessità di cercare in "è assegnato a" una tupla contenente il tecnico da controllare e un intervento con i valori di data e durata che si sovrappongano a quelli del nuovo intervento. La presenza di tale tupla si traduce nella non disponibilità del tecnico. L'attributo coinvolge l'operazione \underline{Inserimento di un Intervento}.
+
+\subsubsection{Tabelle degli accessi}
+Poichè il controllo del campo competenze viene effettuato sia con presenza di ridondanza che non, viene omesso dal conteggio degli accessi. 
+
+\textbf{Con ridondanza}
+
+\begin{table}[h!]
+    \centering
+        \begin{adjustbox}{width=1\textwidth}
+            \begin{tabular}{|m{2,2cm}|m{2cm}|m{2cm}|m{2cm}|m{6cm}|}
+                \hline  
+                \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo} & \textbf{Note}\\ 
+                \hline
+                Tecnico & E & 1 & R & Ricerca candidato \\
+                \hline
+                Tecnico & E & 1 & W & Modifica attributo (disponibile=False)\\
+                \hline
+                Intervento & E & 1 & W & Inserimento \\
+                \hline
+                è assegnato a & R & 1 & W & Inserimento \\
+                \hline
+                Tecnico & E & 1 & W & Modifica attributo (disponibile=True)\\
+                \hline
+            \end{tabular}
+        \end{adjustbox}
+    \caption{Tabella degli accessi per Inserimento di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+La seconda modifica dell'attributo (disponibile=True) avviene quando l'Intervento è terminato.
+
+\textbf{Senza ridondanza}
+
+\begin{table}[h]
+    \centering
+        \begin{adjustbox}{width=0.6\textwidth}
+            \begin{tabular}{|m{2,2cm}|m{2cm}|m{2cm}|m{2cm}|}
+                \hline  
+                \textbf{Concetto} & \textbf{Tipo} & \textbf{Accessi} & \textbf{Tipo} \\ 
+                \hline
+                è assegnato a & R & 1 & R \\
+                \hline
+                Intervento & E & 1 & W \\
+                \hline
+                è assegnato a & R & 1 & W \\
+                \hline
+            \end{tabular}
+        \end{adjustbox}
+    \caption{Tabella degli accessi per Inserimento di un Intervento}
+    \label{tab:accesstable}
+\end{table}
+
+\subsubsection{Analisi dei costi mensili}
+
+\begin{itemize}
+    \item \textbf{Con ridondanza}:
+    \begin{enumerate}
+        \item \textbf{Inserimento di un Intervento}(40/mese): si hanno 160 accessi in scrittura e 40 in lettura, per un totale di 360 accessi 
+    \end{enumerate}
+    \item \textbf{Senza ridondanza}:
+    \begin{enumerate}
+        \item \textbf{Inserimento di un Intervento}(40/mese): si hanno 80 accessi in scrittura e 40 in lettura, per un totale di 200 accessi 
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{Conclusioni}
+
+Risulta dunque molto conveniente rimuovere l'attributo.
+
+\subsection{Gestione delle generalizzazioni}
+
+Nel diagramma ER, data la consegna del problema, sono state inserite \textbf{due generalizzazioni}: quella relativa a \textbf{Cliente}, che si specializza in Organizzazione e Persona, e quella di \textbf{Intervento} che si specializza in Intervento remoto e Intervento in loco.
+
+Data la semplicità delle specializzazioni, una possibile soluzione alla codifica delle generalizzazioni nel modello relazionale è l'\textbf{eliminazione dei nodi figlio}, con il nodo genitore che ne assorbe gli attributi. In breve, eliminiamo Organizzazione e Persona nel caso di Cliente, aggiungendo a Cliente l'attributo "persona di riferimento" come \textbf{attributo opzionale} (può avere valore null).
+La stessa logica viene applicata anche alla generalizzazione su Intervento: rimuoviamo le due specializzazioni e aggiungiamo l'attributo "tel. cliente" a Intervento, anche in questo caso, \textbf{senza} la clausola \textbf{not null}.
+
+Entrambi questi attributi potranno essere popolati nel caso in cui tali entità dovessero essere un Organizzazione o un Intervento remoto.
+
+
+
+\subsection{Revisione di Entità e Relazioni}
+
+\subsubsection{Reifica delle relazioni}
+
+Nel diagramma sono presenti 3 relazioni binarie:
+
+\begin{enumerate}
+    \item \textbf{Effettua} - relazione \underline{uno a molti} tra Cliente (0,N) e Richiesta (1,1) con partecipazione \underline{opzionale}
+    \item \textbf{Fornisce} - relazione \underline{uno a molti} tra Intervento (1,1) e Richiesta (1,N)
+    \item \textbf{è assegnato a} - relazione \underline{uno a molti} tra Tecnico (0,N) e Intervento (1,1) con partecipazione \underline{opzionale}
+\end{enumerate}
+
+Data l'assenza di relazioni molti a molti non è necessaria nessuna reifica. Tuttavia, l'entità Intervento (entità debole), avrebbe in totale 6 attributi senza creare nuove tabelle, dunque per una migliore leggibilità dei dati, è stato deciso di reificare la relazione "è assegnato a". L'entità ottenuta dalla reificazione viene rinominata in "\textbf{Registro\_interventi}" i cui record saranno identificati dalla chiave Tecnico e Intervento con i quali sarà in relazione attraverso le 2 nuove relazioni T-R e R-I.
+
+Non sono invece presenti relazioni ternarie.
+
+\subsubsection{Reifica degli attributi multivalore}
+Nel diagramma è presente un attributo multivalore: Campo competenze di Tecnico. Questo viene dunque reificato nell'entità Competenza e unito all'entità Tecnico con la relazione Possiede.
+
+\newpage
+
+\subsection{Diagramma ER ristrutturato}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.25]{img/ER_FINALE.png}
+    \label{fig:ER_Schema}
+\end{figure}
+
+\subsection{Traduzione dello schema ER in schema relazionale}
+
+In seguito a tutte le scelte progettuali fatte nei punti precedenti, e utilizzando il diagramma ER ristrutturato, si procede alla traduzione nello schema relazionale.
+Nello specifico segue la traduzione delle entità e delle sole relazioni uno a molti, in quanto non ve ne sono di altri tipi.
+
+\subsubsection{Traduzione delle entità}
+Di seguito sono riportate le entità con i rispettivi vincoli applicati sugli attributi. 
+Saranno introdotte delle modifiche per codificare le relazioni non reificate, utilizzando la keyword "Modifica". 
+\\Si danno per scontato i vincoli Unique e NotNull sulle \underline{chiavi} (gli attributi sottolineati).
+
+\begin{itemize}
+    \item \textbf{Cliente}(\underline{ID}, Indirizzo, Tel, PersonaDiRiferimento, NumeroDiRichieste) 
+        \begin{itemize}
+            \item NotNull: Indirizzo, Tel, NumeroDiRichieste
+        \end{itemize}
+    \item \textbf{Richiesta}(\underline{nPratica}, \textit{TipoProblema}, SistemaInteressato, \textit{Cliente}, NumeroDiInterventi
+        \begin{itemize}
+            \item NotNull: TipoProblema, SistemaInteressato, Cliente
+            \item Chiave Esterna: Cliente si riferisce alla chiave primaria dell'entità Cliente, TipoProblema si riferisce alla chiave primaria dell'entità Competenza
+            \item Modifica: Cliente è utilizzato per codificare la partecipazione alla relazione Effettua
+        \end{itemize}
+    \item \textbf{Intervento}(\underline{nIntervento, \textit{Richiesta}}, Data, Durata, TelCliente)
+        \begin{itemize}
+            \item NotNull: Richiesta, Data, Durata
+            \item Chiave Esterna: Richiesta si riferisce alla chiave primaria dell'entità Richiesta
+        \end{itemize}
+    \item \textbf{Registro\_interventi}(\underline{\textit{Tecnico}, \textit{Richiesta}, \textit{Intervento}})
+        \begin{itemize}
+        \item Chiave Esterna: Tecnico si riferisce alla chiave primaria dell'entità Tecnico, Richiesta si riferisce alla chiave primaria (Richiesta) dell'entità Intervento, Intervento si riferisce alla chiave primaria (nIntervento) dell'entità Intervento
+        \item Modifica: Tecnico è utilizzato per codificare la partecipazione alla relazione T-R, Intervento per codificare la partecipazione alla relazione R-I
+        \end{itemize}
+    \item \textbf{Tecnico}(\underline{CF})
+    \item \textbf{Competenza}(\underline{Campo})
+\end{itemize}
+\subsubsection{Traduzioni di relazioni}
+Di seguito sono riportate le relazioni con i rispettivi vincoli applicati sugli attributi.
+Anche in questo caso si danno per scontati i vincoli Unique e NotNull sulle \underline{chiavi}.
+
+\begin{itemize}
+    \item \textbf{Effettua}: non reificata, viene codificata attraverso l'attributo Cliente in Richiesta.
+    \item \textbf{Fornisce}: non reificata, viene codificata attraverso l'attributo Richiesta in Intervento (entità debole).
+    \item \textbf{R-I}: già codificata nella reificazione di RegistroInterventi (attributo Intervento dell'entità RegistroInterventi)
+    \item \textbf{T-R}: già codificata nella reificazione di RegistroInterventi (attributo Tecnico dell'entità RegistroInterventi)
+    \item \textbf{Possiede}(\underline{\textit{Tecnico}, \textit{Competenza}})
+    \begin{itemize}
+        \item Chiave Esterna: Tecnico si riferisce alla chiave primaria dell'entità Tecnico, Competenza si riferisce alla chiave primaria dell'entità Competenza
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Osservazioni}
+Il vincolo di integrità indicato al punto 3.2.1, è codificato attraverso il vincolo di chiave esterna di TipoProblema in Richiesta (TipoProblema sarà dunque nello stesso dominio di Competenza).
+
+\subsection{Schema Relazionale}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.2]{img/schema_relazionale.png}
+    \label{fig:ER_Schema}
+\end{figure}
+
+\section{Progettazione fisica}
+
+In questa sezione verrà discussa l'implementazione in Postgres SQL del sistema progettato nei punti precedenti.
+
+\subsubsection{Definizione delle tabelle}
+
+\subsubsection{Definizione dei trigger}
+
+
+
+\end{document}
+
