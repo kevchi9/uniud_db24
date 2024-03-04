@@ -1,0 +1,7 @@
+INSERT INTO Competenze(Campo) VALUES
+('Idraulica'),
+('Elettronica'),
+('Informatica'),
+('Diagnostica'),
+('Efficienza Energ.'),
+('Termodinamica');
