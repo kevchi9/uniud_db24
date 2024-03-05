@@ -16,7 +16,7 @@ def data_generator_cliente(n):
     Output is stored in cliente_samples.txt.
     '''
 
-    data_file = open('cliente_samples.txt', 'w')
+    data_file = open('output/cliente_samples.txt', 'w')
     input_string = "INSERT INTO Cliente(ID, Indirizzo, Tel, PersonaDiRiferimento, NumeroDiRichieste) VALUES\n"
 
     for i in range(1, n+1):
@@ -51,17 +51,17 @@ def data_generator_richiesta(n):
     # competences is the set of possible values for the attribute "SistemaInteressato"
     global products
 
-    data_file = open('richiesta_samples.txt', 'w')
+    data_file = open('output/richiesta_samples.txt', 'w')
     input_string = "INSERT INTO Richiesta(nPratica, TipoProblema, SistemaInteressato, Cliente, NumeroDiInterventi) VALUES\n"
 
     # read data for the foreign keys
-    cliente_file = open('cliente_samples.txt', 'r')
+    cliente_file = open('output/cliente_samples.txt', 'r')
     cliente_rawlist = cliente_file.read().splitlines()[1:]
     cliente_list = []
     for item in cliente_rawlist:
         cliente_list.append(item[1:5])
 
-    tecnico_file = open('tecnico_samples.txt', 'r')
+    tecnico_file = open('output/tecnico_samples.txt', 'r')
     tecnico_rawlist = tecnico_file.read().splitlines()[1:]
     tecnico_list = []
     for item in tecnico_rawlist:
@@ -94,11 +94,11 @@ def data_generator_intervento(n):
     Output is stored in intervento_samples.txt.
     '''
 
-    data_file = open('intervento_samples.txt', 'w')
+    data_file = open('output/intervento_samples.txt', 'w')
     input_string = "INSERT INTO Intervento(Richiesta, nIntervento, Data, Durata, TelCliente) VALUES\n"
 
     # read data for the foreign keys
-    richiesta_file = open('richiesta_samples.txt', 'r')
+    richiesta_file = open('output/richiesta_samples.txt', 'r')
     richiesta_rawlist = richiesta_file.read().splitlines()[1:]
     richiesta_list = []
     for item in richiesta_rawlist:
@@ -153,20 +153,20 @@ def data_generator_registro_interventi():
     Output is stored in registrointerventi_samples.txt.
     '''
 
-    data_file = open('registro_interventi.txt', 'w')
+    data_file = open('output/registro_interventi.txt', 'w')
     input_string = "INSERT INTO RegistroInterventi(Tecnico, Richiesta, Intervento) VALUES\n"
 
     # read data for the foreign keys
-    possiede_file = open('possiede_samples.txt', 'r')
+    possiede_file = open('output/possiede_samples.txt', 'r')
     possiede_rawlist = possiede_file.read().splitlines()[1:]
     
-    intervento_file = open('intervento_samples.txt', 'r')
+    intervento_file = open('output/intervento_samples.txt', 'r')
     intervento_rawlist = intervento_file.read().splitlines()[1:]
     intervento_list = [] # contains tuples, first element is request_id, second element is intervention_id
     for item in intervento_rawlist:
         intervento_list.append((item[1:5], item[7:11]))
 
-    richiesta_file = open('richiesta_samples.txt', 'r')
+    richiesta_file = open('output/richiesta_samples.txt', 'r')
     richiesta_rawlist = richiesta_file.read().splitlines()[1:]
 
     for item in intervento_list:
@@ -206,7 +206,7 @@ def data_generator_tecnico(n):
     Output is stored in tecnico_samples.txt.
     '''
     
-    data_file = open('./tecnico_samples.txt', 'w')
+    data_file = open('output/tecnico_samples.txt', 'w')
     input_string = "INSERT INTO Tecnico(CF) VALUES\n"
 
     for i in range(1, n+1):
@@ -231,7 +231,7 @@ def data_generator_competenza():
 
     global competences
 
-    data_file = open('competenze_samples.txt', 'w')
+    data_file = open('output/competenze_samples.txt', 'w')
     input_string = "INSERT INTO Competenza(Campo) VALUES\n"
 
     for item in competences:
@@ -258,11 +258,11 @@ def data_generator_possiede(n):
 
     global competences
     
-    data_file = open('possiede_samples.txt', 'w')
+    data_file = open('output/possiede_samples.txt', 'w')
     input_string = "INSERT INTO Possiede(Tecnico, Competenza) VALUES\n"
     
     # read data for the foreign keys
-    tecnico_file = open('tecnico_samples.txt', 'r')
+    tecnico_file = open('output/tecnico_samples.txt', 'r')
     tecnico_list = tecnico_file.read().splitlines()
 
     for index in range(1, len(tecnico_list)):

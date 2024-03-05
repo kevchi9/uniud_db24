@@ -18,4 +18,5 @@ def main():
     # f.data_generator_possiede(max_competences)
     # f.data_generator_intervento(max_interventions)
     f.data_generator_registro_interventi()
+    
 main()
