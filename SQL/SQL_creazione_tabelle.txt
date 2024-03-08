@@ -1,8 +1,8 @@
 CREATE TABLE Cliente(
 ID int NOT NULL PRIMARY KEY,
 Indirizzo varchar(20) NOT NULL,
-Tel int NOT NULL,
-PersonaDiRiferimento varchar(20) NOT NULL,
+Tel bigint NOT NULL,
+PersonaDiRiferimento varchar(20),
 NumeroDiRichieste int NOT NULL);
 
 CREATE TABLE Tecnico(
@@ -25,7 +25,7 @@ Richiesta int NOT NULL,
 nIntervento int NOT NULL,
 Data DATE NOT NULL,
 Durata interval NOT NULL,
-TelCliente int NOT NULL,
+TelCliente bigint,
 PRIMARY KEY(Richiesta, nIntervento),
 CONSTRAINT fk_richiesta FOREIGN KEY (Richiesta) REFERENCES Richiesta(nPratica));
 
@@ -46,32 +46,41 @@ CONSTRAINT fk_competenza FOREIGN KEY (Competenza) REFERENCES Competenza(Campo));
 
 CREATE or REPLACE FUNCTION update_numeroDiInterventi()
 RETURNS TRIGGER
-language plpgsql as $$
+language plpgsql
+as $$
+
+	declare
+	newValue integer;
+
 	begin
-	
-	SET newValue int = (SELECT NumeroDiInterventi FROM Richiesta WHERE nPratica = new.Richiesta) + 1
-	UPDATE Richiesta SET NumeroDiInterventi = newValue
+	newValue := (SELECT (NumeroDiInterventi + 1) FROM Richiesta WHERE nPratica = new.Richiesta);
+	UPDATE Richiesta SET NumeroDiInterventi = newValue WHERE nPratica = new.Richiesta;
 	return new;
 	end;
 $$;
 
 CREATE OR REPLACE FUNCTION update_numeroDiRichieste()
-RETURN TRIGGER
-language plpgsql as $$
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare 
+	newValue integer;
+
 	begin
-	SET @newValue = (SELECT NumeroDiRichieste FROM Cliente WHERE ID = new.Cliente) + 1
-	UPDATE Cliente SET NumeroDiRichieste = @newValue
+	newValue := (SELECT (NumeroDiRichieste + 1) FROM Cliente WHERE ID = new.Cliente);
+	UPDATE Cliente SET NumeroDiRichieste = newValue WHERE ID = new.Cliente;
 	return new;
 	end;
 $$;
 
-CREATE TRIGGER update_counter()
+CREATE TRIGGER update_counter
+AFTER INSERT ON Richiesta
+for each row
+execute procedure update_numeroDiRichieste();
+
+CREATE TRIGGER update_counter
 AFTER INSERT ON Intervento
 for each row
 execute procedure update_numeroDiInterventi();
-
-CREATE TRIGGER update_counter()
-AFTER INSERT ON Richiesta
-for each row
-execute procedure update_numeroDiInterventi
 

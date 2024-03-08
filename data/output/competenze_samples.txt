@@ -1,4 +1,4 @@
-INSERT INTO Competenze(Campo) VALUES
+INSERT INTO Competenza(Campo) VALUES
 ('Idraulica'),
 ('Elettronica'),
 ('Informatica'),
