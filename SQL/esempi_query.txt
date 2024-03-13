@@ -1,0 +1,101 @@
+# 1 # Ottieni il numero di richieste raggruppate per tipo di problema ###
+
+SELECT tipoproblema, COUNT(*) as numerorichieste
+FROM richiesta r, cliente c 
+WHERE r.cliente = c.id 
+GROUP BY tipoproblema;
+
+####################################################################################
+
+# 2 # Ottieni il numero di interventi per tipo di problema ###
+
+SELECT competenza, COUNT(*) as numero_interventi 
+FROM registrointerventi as r NATURAL JOIN possiede as p
+GROUP BY competenza;
+
+####################################################################################
+
+# 3 # Ottieni i tecnici e il numero di competenze ###
+
+SELECT tecnico, COUNT(*) as competenze 
+FROM possiede
+GROUP BY tecnico;
+
+####################################################################################
+
+# 4 # Ottieni il numero di tecnici competenti nei singoli campi ###
+
+SELECT competenza, COUNT(*) as tecnici_competenti 
+FROM possiede 
+GROUP BY competenza;
+
+####################################################################################
+
+# 5 # Ottieni il numero di richieste per tipo di problema di ogni cliente ###
+
+SELECT cliente, tipoproblema, COUNT(*)
+FROM richiesta r, cliente c
+WHERE r.cliente = c.id
+GROUP BY cliente, tipoproblema
+ORDER BY cliente;
+
+####################################################################################
+
+# 6 # Ottieni i clienti che hanno fatto dalle 5 alle 7 richieste ###
+
+SELECT cliente, nRichieste 
+FROM (SELECT cliente, COUNT(*) as nRichieste 
+    FROM richiesta
+    GROUP BY (cliente))
+WHERE nRichieste > 4 AND nRichieste < 8
+ORDER BY cliente;
+
+####################################################################################
+
+# 7 # Ottieni i tecnici che hanno lavorato per almeno due clienti in comune ###
+
+SELECT t1.tecnico AS tecnico1, t2.tecnico AS tecnico2, t1.cliente
+FROM (registrointerventi JOIN richiesta ON npratica = registrointerventi.richiesta) AS t1, 
+(registrointerventi JOIN richiesta ON npratica = registrointerventi.richiesta) AS t2
+WHERE t1.tecnico != t2.tecnico AND t1.cliente = t2.cliente;
+
+####################################################################################
+
+# 8 # Ottieni i clienti che hanno effettuato almeno 4 richiesta di tipo diverso ###
+
+SELECT DISTINCT r1.cliente
+FROM richiesta r1, richiesta r2, richiesta r3 , richiesta r4
+WHERE r1.cliente = r2.cliente AND r1.cliente = r3.cliente AND r1.cliente = r4.cliente
+AND r1.tipoproblema != r2.tipoproblema AND r1.tipoproblema != r3.tipoproblema AND r1.tipoproblema != r4.tipoproblema
+AND r2.tipoproblema != r3.tipoproblema AND r2.tipoproblema != r4.tipoproblema AND r3.tipoproblema != r4.tipoproblema
+ORDER BY r1.cliente;
+
+####################################################################################
+
+# 9 # Ottieni i tecnici che hanno effettuato almeno 100 interventi nel 2020 ###
+
+SELECT tecnico, n_interventi
+FROM (SELECT tecnico, count(*) as n_interventi
+    FROM RegistroInterventi as r, Intervento as i 
+    WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
+    GROUP BY tecnico)
+WHERE n_interventi > 99
+ORDER BY n_interventi DESC;
+
+####################################################################################
+
+# 10 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
+
+SELECT EXTRACT(year FROM data) as anno, 
+    count(*) as n_interventi
+FROM intervento 
+GROUP BY EXTRACT(year FROM data);
+
+####################################################################################
+
+# 11 # Ottieni il numero di interventi per ciascun cliente e tipoproblema ###
+
+SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
+FROM registrointerventi JOIN richiesta on npratica = registrointerventi.richiesta
+GROUP BY (cliente, tipoproblema)
+ORDER BY nInterventi desc;
