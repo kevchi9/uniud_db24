@@ -17,8 +17,14 @@ TipoProblema varchar(20) NOT NULL,
 Cliente int NOT NULL,
 SistemaInteressato varchar(20) NOT NULL,
 NumeroDiInterventi int NOT NULL,
-CONSTRAINT fk_tipoProblema FOREIGN KEY (TipoProblema) REFERENCES Competenza(Campo),
-CONSTRAINT fk_cliente FOREIGN KEY (Cliente) REFERENCES Cliente(ID));
+CONSTRAINT fk_tipoProblema FOREIGN KEY (TipoProblema) 
+	REFERENCES Competenza(Campo) 
+	ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT fk_cliente FOREIGN KEY (Cliente) 
+	REFERENCES Cliente(ID)
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 
 CREATE TABLE Intervento(
 Richiesta int NOT NULL,
@@ -27,22 +33,40 @@ Data DATE NOT NULL,
 Durata interval NOT NULL,
 TelCliente bigint,
 PRIMARY KEY(Richiesta, nIntervento),
-CONSTRAINT fk_richiesta FOREIGN KEY (Richiesta) REFERENCES Richiesta(nPratica));
+CONSTRAINT fk_richiesta FOREIGN KEY (Richiesta) 
+	REFERENCES Richiesta(nPratica)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
 
 CREATE TABLE RegistroInterventi(
 Tecnico varchar(16) NOT NULL,
 Richiesta int NOT NULL,
 Intervento int NOT NULL,
 PRIMARY KEY (Tecnico, Richiesta, Intervento),
-CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) REFERENCES Tecnico(CF),
-CONSTRAINt fk_richiesta_intervento FOREIGN KEY (Richiesta, Intervento) REFERENCES Intervento(Richiesta, nIntervento));
+CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) 
+	REFERENCES Tecnico(CF)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE,
+CONSTRAINt fk_richiesta_intervento FOREIGN KEY (Richiesta, Intervento) 
+	REFERENCES Intervento(Richiesta, nIntervento)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
 
 CREATE TABLE Possiede(
 Tecnico varchar(16) NOT NULL,
 Competenza varchar(20) NOT NULL,
 PRIMARY KEY (Tecnico, Competenza),
-CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) REFERENCES Tecnico(CF),
-CONSTRAINT fk_competenza FOREIGN KEY (Competenza) REFERENCES Competenza(Campo));
+CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico)
+	REFERENCES Tecnico(CF)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE,
+CONSTRAINT fk_competenza FOREIGN KEY (Competenza)
+	REFERENCES Competenza(Campo)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
 
 
 #############################################################################
@@ -85,14 +109,14 @@ as $$
 	newValue integer;
 
 	begin
-	newValue := (SELECT (NumeroDiInterventi - 1) FROM Richiesta WHERE nPratica = new.Richiesta);
-	UPDATE Richiesta SET NumeroDiInterventi = newValue WHERE nPratica = new.Richiesta;
-	return new;
+	newValue := (SELECT (NumeroDiInterventi - 1) FROM Richiesta WHERE nPratica = old.Richiesta);
+	UPDATE Richiesta SET NumeroDiInterventi = newValue WHERE nPratica = old.Richiesta;
+	return old;
 	end;
 $$;
 
 CREATE TRIGGER decrease_counter
-AFTER DELETE ON Intervento
+BEFORE DELETE ON Intervento
 for each row
 execute procedure decrease_numeroDiInterventi();
 
@@ -133,15 +157,15 @@ as $$
 	newValue integer;
 
 	begin
-	newValue := (SELECT (NumeroDiRichieste - 1) FROM Cliente WHERE ID = new.Cliente);
-	UPDATE Cliente SET NumeroDiRichieste = newValue WHERE ID = new.Cliente;
-	return new;
+	newValue := (SELECT (NumeroDiRichieste - 1) FROM Cliente WHERE ID = old.Cliente);
+	UPDATE Cliente SET NumeroDiRichieste = newValue WHERE ID = old.Cliente;
+	return old;
 	end;
 $$;
 
 CREATE TRIGGER decrease_counter
-AFTER DELETE ON Richiesta
+BEFORE DELETE ON Richiesta
 for each row
-execute procedure update_numeroDiRichieste();
+execute procedure decrease_numeroDiRichieste();
 
 
