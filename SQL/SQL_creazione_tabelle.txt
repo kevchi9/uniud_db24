@@ -44,7 +44,13 @@ PRIMARY KEY (Tecnico, Competenza),
 CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) REFERENCES Tecnico(CF),
 CONSTRAINT fk_competenza FOREIGN KEY (Competenza) REFERENCES Competenza(Campo));
 
-CREATE or REPLACE FUNCTION update_numeroDiInterventi()
+
+#############################################################################
+### FUNCTION AND TRIGGER 1: UPDATE(+) nInterventi AFTER INSERT Intervento ###
+#############################################################################
+
+
+CREATE or REPLACE FUNCTION increase_numeroDiInterventi()
 RETURNS TRIGGER
 language plpgsql
 as $$
@@ -59,7 +65,42 @@ as $$
 	end;
 $$;
 
-CREATE OR REPLACE FUNCTION update_numeroDiRichieste()
+CREATE TRIGGER increase_counter
+AFTER INSERT ON Intervento
+for each row
+execute procedure increase_numeroDiInterventi();
+
+
+#############################################################################
+### FUNCTION AND TRIGGER 2: UPDATE(-) nInterventi AFTER DELETE Intervento ###
+#############################################################################
+
+
+CREATE or REPLACE FUNCTION decrease_numeroDiInterventi()
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare
+	newValue integer;
+
+	begin
+	newValue := (SELECT (NumeroDiInterventi - 1) FROM Richiesta WHERE nPratica = new.Richiesta);
+	UPDATE Richiesta SET NumeroDiInterventi = newValue WHERE nPratica = new.Richiesta;
+	return new;
+	end;
+$$;
+
+CREATE TRIGGER decrease_counter
+AFTER DELETE ON Intervento
+for each row
+execute procedure decrease_numeroDiInterventi();
+
+#############################################################################
+###  FUNCTION AND TRIGGER 3: UPDATE(+) nRichieste AFTER INSERT Richiesta  ###
+#############################################################################
+
+CREATE OR REPLACE FUNCTION increase_numeroDiRichieste()
 RETURNS TRIGGER
 language plpgsql
 as $$
@@ -74,13 +115,33 @@ as $$
 	end;
 $$;
 
-CREATE TRIGGER update_counter
+CREATE TRIGGER increase_counter
 AFTER INSERT ON Richiesta
+for each row
+execute procedure increase_numeroDiRichieste();
+
+#############################################################################
+### FUNCTION AND TRIGGER 4: UPDATE(-) nRichieste AFTER DELETE Richiesta ###
+#############################################################################
+
+CREATE OR REPLACE FUNCTION decrease_numeroDiRichieste()
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare 
+	newValue integer;
+
+	begin
+	newValue := (SELECT (NumeroDiRichieste - 1) FROM Cliente WHERE ID = new.Cliente);
+	UPDATE Cliente SET NumeroDiRichieste = newValue WHERE ID = new.Cliente;
+	return new;
+	end;
+$$;
+
+CREATE TRIGGER decrease_counter
+AFTER DELETE ON Richiesta
 for each row
 execute procedure update_numeroDiRichieste();
 
-CREATE TRIGGER update_counter
-AFTER INSERT ON Intervento
-for each row
-execute procedure update_numeroDiInterventi();
 
