@@ -1,0 +1,59 @@
+```{r, echo=FALSE}
+library("RPostgreSQL")
+library("tidyverse")
+library("lubridate")
+library("ggplot2")
+```
+
+```{r, echo=FALSE}
+dsn_database = "basi24"
+dsn_server = "localhost"
+dsn_port = "5432"
+dsn_uid = "postgres"
+dsn_pswd = "postgres"
+
+tryCatch({
+    drv <- dbDriver("PostgreSQL")
+    print("Connecting to Database...")
+    connec <- dbConnect(drv,
+                dbname = dsn_database,
+                host = dsn_server,
+                port = dsn_port,
+                user = dsn_uid,
+                password = dsn_pswd)
+    print("Database Connected!")
+},
+error = function(cond) {
+    print("Unable to connect to Database")
+})
+```
+
+# Ottieni il numero di interventi per ogni anno
+
+```{r, echo = FALSE}
+intervento_df <- dbGetQuery(connec, "SELECT * FROM progetto_basi.intervento")
+
+intervento_df <- intervento_df[order(intervento_df$data),]
+
+interv_dist <-
+    intervento_df %>% 
+    group_by(data = lubridate::floor_date(data, 'year')) %>%
+    summarize(numero_interventi = n())
+
+interv_dist$data <- format(as.Date(interv_dist$data), "%Y")
+
+ggplot(interv_dist, aes(data, numero_interventi, fill=data)) + 
+    geom_bar(stat="identity") +
+    theme_bw() +
+    theme(text=element_text(size = 17))
+
+```
+
+
+```{r, echo=FALSE}
+
+# interv_dist <- aggregate(intervento_df["nintervento"], by=intervento_df["data"], sum) %>%  
+    # arrange() %>%
+# interv_dist$data <- lubridate::my(intervento_df$data)
+
+```

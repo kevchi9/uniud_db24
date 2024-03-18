@@ -89,13 +89,23 @@ ORDER BY n_interventi DESC;
 SELECT EXTRACT(year FROM data) as anno, 
     count(*) as n_interventi
 FROM intervento 
-GROUP BY EXTRACT(year FROM data);
+GROUP BY EXTRACT(month FROM data);
 
 ####################################################################################
 
-# 11 # Ottieni il numero di interventi per ciascun cliente e tipoproblema ###
+# 11 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
+
+SELECT EXTRACT(month FROM data) as mese, 
+    count(*) as n_interventi
+FROM intervento 
+GROUP BY mese
+ORDER BY mese;
+
+####################################################################################
+
+# 12 # Ottieni il numero di interventi per ciascun cliente e tipoproblema ###
 
 SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
 FROM registrointerventi JOIN richiesta on npratica = registrointerventi.richiesta
 GROUP BY (cliente, tipoproblema)
-ORDER BY nInterventi desc;
+ORDER BY cliente;
