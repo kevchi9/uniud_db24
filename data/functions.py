@@ -1,7 +1,7 @@
 import string
 import random
 import datetime
-import aux
+import data.ausiliary_functions as ausiliary_functions
 
 uppercase_letters = list(string.ascii_uppercase)
 all_numbers = (0,1,2,3,4,5,6,7,8,9)
@@ -112,7 +112,7 @@ def data_generator_intervento(n):
         # 1st loop is used to ensure that the date randomly generated are sorted from the oldest to the newest
         interventions_date = []
         for i in range(0, rand_intervention_amount):
-            interventions_date.append(aux.random_date('01/01/2019', '01/01/2022', "%d/%m/%Y"))
+            interventions_date.append(ausiliary_functions.random_date('01/01/2019', '01/01/2022', "%d/%m/%Y"))
         interventions_date.sort()
 
         # 2nd loop is used to randomize the amount of intervention for each request (min 1, max n)
