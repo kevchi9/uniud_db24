@@ -15,15 +15,7 @@ GROUP BY competenza;
 
 ####################################################################################
 
-# 3 # Ottieni i tecnici e il numero di competenze ###
-
-SELECT tecnico, COUNT(*) as competenze 
-FROM possiede
-GROUP BY tecnico;
-
-####################################################################################
-
-# 4 # Ottieni il numero di tecnici competenti nei singoli campi ###
+# 3 # Ottieni il numero di tecnici competenti nei singoli campi ###
 
 SELECT competenza, COUNT(*) as tecnici_competenti 
 FROM possiede 
@@ -31,7 +23,7 @@ GROUP BY competenza;
 
 ####################################################################################
 
-# 5 # Ottieni il numero di richieste per tipo di problema di ogni cliente ###
+# 4 # Ottieni il numero di richieste per tipo di problema di ogni cliente ###
 
 SELECT cliente, tipoproblema, COUNT(*)
 FROM richiesta r, cliente c
@@ -41,7 +33,7 @@ ORDER BY cliente;
 
 ####################################################################################
 
-# 6 # Ottieni i clienti che hanno fatto dalle 5 alle 7 richieste ###
+# 5 # Ottieni i clienti che hanno fatto dalle 5 alle 7 richieste ###
 
 SELECT cliente, nRichieste 
 FROM (SELECT cliente, COUNT(*) as nRichieste 
@@ -52,7 +44,7 @@ ORDER BY cliente;
 
 ####################################################################################
 
-# 7 # Ottieni i tecnici che hanno lavorato per almeno due clienti in comune ###
+# 6 # Ottieni i tecnici che hanno lavorato per almeno due clienti in comune ###
 
 SELECT t1.tecnico AS tecnico1, t2.tecnico AS tecnico2, t1.cliente
 FROM (registrointerventi JOIN richiesta ON npratica = registrointerventi.richiesta) AS t1, 
@@ -61,7 +53,7 @@ WHERE t1.tecnico != t2.tecnico AND t1.cliente = t2.cliente;
 
 ####################################################################################
 
-# 8 # Ottieni i clienti che hanno effettuato almeno 4 richiesta di tipo diverso ###
+# 7 # Ottieni i clienti che hanno effettuato almeno 4 richiesta di tipo diverso ###
 
 SELECT DISTINCT r1.cliente
 FROM richiesta r1, richiesta r2, richiesta r3 , richiesta r4
@@ -72,7 +64,7 @@ ORDER BY r1.cliente;
 
 ####################################################################################
 
-# 9 # Ottieni i tecnici che hanno effettuato almeno 100 interventi nel 2020 ###
+# 8A # Ottieni i tecnici che hanno effettuato almeno 100 interventi nel 2020 ###
 
 SELECT tecnico, n_interventi
 FROM (SELECT tecnico, count(*) as n_interventi
@@ -82,9 +74,18 @@ FROM (SELECT tecnico, count(*) as n_interventi
 WHERE n_interventi > 99
 ORDER BY n_interventi DESC;
 
+# 8B # Ottieni la distribuzione degli interventi effettuati dai tecnici nel 2020 ###
+
+SELECT tecnico, n_interventi
+FROM (SELECT tecnico, count(*) as n_interventi
+    FROM RegistroInterventi as r, Intervento as i 
+    WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
+    GROUP BY tecnico)
+ORDER BY n_interventi DESC;
+
 ####################################################################################
 
-# 10 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
+# 9 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
 
 SELECT EXTRACT(year FROM data) as anno, 
     count(*) as n_interventi
@@ -93,7 +94,7 @@ GROUP BY EXTRACT(month FROM data);
 
 ####################################################################################
 
-# 11 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
+# 10 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
 
 SELECT EXTRACT(month FROM data) as mese, 
     count(*) as n_interventi
@@ -103,7 +104,7 @@ ORDER BY mese;
 
 ####################################################################################
 
-# 12 # Ottieni il numero di interventi per ciascun cliente e tipoproblema ###
+# 11 # Ottieni il numero di interventi per ciascun cliente e tipoproblema ###
 
 SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
 FROM registrointerventi JOIN richiesta on npratica = registrointerventi.richiesta

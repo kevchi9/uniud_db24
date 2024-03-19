@@ -46,14 +46,41 @@ ggplot(interv_dist, aes(data, numero_interventi, fill=data)) +
     geom_bar(stat="identity") +
     theme_bw() +
     theme(text=element_text(size = 17))
+```
+
+# Ottieni il numero di interventi per tipo di problema
+
+```{r, echo=FALSE}
+distfreq_type_interv_df <- dbGetQuery(connec, "SELECT competenza as tipoproblema, COUNT(*) as numero_interventi 
+                                                FROM progetto_basi.registrointerventi as r NATURAL JOIN progetto_basi.possiede as p
+                                                GROUP BY tipoproblema")
+
+ggplot(distfreq_type_interv_df, aes(tipoproblema, numero_interventi, fill=tipoproblema)) + 
+    geom_bar(stat="identity") +
+    theme_bw() +
+    theme(text=element_text(size = 17), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ```
 
+# Ottieni la distribuzione di frequenza degli interventi effettuati dai singoli tecnici nel 2020
 
 ```{r, echo=FALSE}
+raw_df <- dbGetQuery(connec, "SELECT tecnico, n_interventi
+                                                        FROM (SELECT tecnico, count(*) as n_interventi
+                                                            FROM progetto_basi.RegistroInterventi as r, progetto_basi.Intervento as i 
+                                                            WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
+                                                            GROUP BY tecnico)
+                                                        ORDER BY n_interventi DESC")
 
-# interv_dist <- aggregate(intervento_df["nintervento"], by=intervento_df["data"], sum) %>%  
-    # arrange() %>%
-# interv_dist$data <- lubridate::my(intervento_df$data)
+distfreq_technician_interv_df <-
+    raw_df %>%
+    mutate(freq = (n_interventi / sum(raw_df$n_interventi)) * 100) %>%
+    mutate(across(where(is.numeric), ~ round(., 3)))
 
+ggplot(distfreq_technician_interv_df, aes(x="", y=n_interventi, fill=tecnico)) +
+    geom_bar(stat="identity", width=1) +
+    coord_polar("y", start=0) +
+    geom_text(aes(label = paste0(freq, "%")), position = position_stack(vjust=0.5)) +
+    labs(x = NULL, y = NULL, fill = NULL) +
+    theme_void()
 ```

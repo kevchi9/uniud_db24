@@ -153,7 +153,7 @@ def data_generator_registro_interventi():
     Output is stored in registrointerventi_samples.txt.
     '''
 
-    data_file = open('output/registro_interventi.txt', 'w')
+    data_file = open('output/registro_interventi_samples.txt', 'w')
     input_string = "INSERT INTO RegistroInterventi(Tecnico, Richiesta, Intervento) VALUES\n"
 
     # read data for the foreign keys
