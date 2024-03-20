@@ -41,8 +41,13 @@ interv_dist$legend <- factor(interv_dist$anno, levels = c(2019, 2020, 2021))
 
 ggplot(interv_dist, aes(anno, n_interventi, fill=legend)) + 
     geom_bar(stat="identity") +
+    xlab("Tempo") +
+    ylab("Interventi") +
+    guides(fill="none") +
     theme_bw() +
-    theme(text=element_text(size = 17))
+    theme(text=element_text(size = 12))
+
+ggsave(file=".graphs/interv_years.png", width=5, height=8, dpi=300)
 ```
 
 # Ottieni il numero di interventi per ogni mese in ordine cronologico
@@ -60,11 +65,19 @@ interv_dist <-
 # palette is a set of 36 colors used to color the 36 dots 
 palette <- rep(c("blue", "red", ...), length.out = 36)
 
+Legenda <- as.factor(interv_dist$data)
+
 # in order to map values into colors, as.factor(data) is used
-ggplot(interv_dist, aes(x = data, y = numero_interventi, color = as.factor(data), group = 1)) +  
+ggplot(interv_dist, aes(x = data, y = numero_interventi, color = Legenda, group = 1)) +
     geom_point() +
     scale_fill_manual(values = palette) +
-    geom_line() 
+    geom_line() +
+    xlab("Tempo") + 
+    ylab("Interventi") +
+    theme_bw() + 
+    theme(text=element_text(size = 17))
+
+ggsave(file=".graphs/interv_months.png", width=15, height=5, dpi=300)
 ```
 
 # Ottieni il numero di interventi per tipo di problema
@@ -76,9 +89,13 @@ distfreq_type_interv_df <- dbGetQuery(connec, "SELECT competenza as tipoproblema
 
 ggplot(distfreq_type_interv_df, aes(tipoproblema, numero_interventi, fill=tipoproblema)) + 
     geom_bar(stat="identity") +
+    guides(fill="none") +
+    xlab("Tipo di problema") +
+    ylab("Interventi") +
     theme_bw() +
-    theme(text=element_text(size = 17), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+    theme(text=element_text(size = 12))
 
+ggsave(file=".graphs/interv_problemtype.png", width=7, height=10, dpi=300)
 ```
 
 # Ottieni la distribuzione di frequenza degli interventi effettuati dai singoli tecnici nel 2020
@@ -99,9 +116,13 @@ distfreq_technician_interv_df <-
 ggplot(distfreq_technician_interv_df, aes(x="", y=n_interventi, fill=tecnico)) +
     geom_bar(stat="identity", width=1) +
     coord_polar("y", start=0) +
-    geom_text(aes(label = paste0(freq, "%")), position = position_stack(vjust=0.5)) +
+    guides(fill=guide_legend(title="Tecnico")) +
+    geom_text(aes(label = paste0(freq, "%")), position = position_stack(vjust=0.5), size=6) +
     labs(x = NULL, y = NULL, fill = NULL) +
-    theme_void()
+    theme_void() +
+    theme(text=element_text(size = 12))
+
+ggsave(file=".graphs/percent_interv_tech.jpg", width=13, height=10, dpi=300)
 ```
 
 # Ottieni il numero di intervento per tipo problema dei 5 clienti con più interventi registrati
@@ -125,6 +146,19 @@ best_client_df$cliente <- as.character(best_client_df$cliente)
 array <- paste("cliente", unique(best_client_df$cliente) , sep = "_")
 
 ggplot(best_client_df, aes(fill = tipoproblema, y = ninterventi, x = cliente)) +
-  geom_bar(position='dodge', stat='identity') +
-  scale_x_discrete(labels = array)
+    geom_bar(position='stack', stat='identity') +
+    theme_bw() + 
+    xlab("Clienti") + 
+    ylab("Interventi") +
+    guides(fill=guide_legend(title="Tipo di problema")) +
+    scale_x_discrete(labels = array) +
+    theme(text=element_text(size = 12))
+
+ggsave(file=".graphs/top_5_clients.jpg", width=8, height=11, dpi=300)
+```
+
+```{r, echo=FALSE}
+best_client_df <- dbGetQuery(connec, "SELECT * FROM progetto_basi.Tecnico")
+
+print(best_client_df)
 ```
