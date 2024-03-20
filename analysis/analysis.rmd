@@ -7,8 +7,8 @@ library("ggplot2")
 
 ```{r, echo=FALSE}
 dsn_database = "postgres"
-dsn_server = "localhost"
-dsn_port = "5432"
+dsn_server = "120."
+dsn_port = "5433"
 dsn_uid = "postgres"
 dsn_pswd = "postgres"
 
@@ -33,7 +33,7 @@ error = function(cond) {
 ```{r, echo = FALSE}
 interv_dist <- dbGetQuery(connec, "SELECT EXTRACT(year FROM data) as anno, 
                                         count(*) as n_interventi
-                                    FROM progetto_basi.intervento 
+                                    FROM basi.intervento 
                                     GROUP BY anno
                                     ORDER BY anno")
 
@@ -48,7 +48,7 @@ ggplot(interv_dist, aes(anno, n_interventi, fill=legend)) +
 # Ottieni il numero di interventi per ogni mese in ordine cronologico
 
 ```{r, echo = FALSE}
-intervento_df <- dbGetQuery(connec, "SELECT * FROM progetto_basi.intervento")
+intervento_df <- dbGetQuery(connec, "SELECT * FROM basi.intervento")
 
 intervento_df <- intervento_df[order(intervento_df$data),]
 
@@ -64,14 +64,17 @@ palette <- rep(c("blue", "red", ...), length.out = 36)
 ggplot(interv_dist, aes(x = data, y = numero_interventi, color = as.factor(data), group = 1)) +  
     geom_point() +
     scale_fill_manual(values = palette) +
-    geom_line() 
+    geom_line()
+
+#ggsave(file = "graf.png", width = 15, heigth = 5,dpi = 150)
+
 ```
 
 # Ottieni il numero di interventi per tipo di problema
 
 ```{r, echo=FALSE}
 distfreq_type_interv_df <- dbGetQuery(connec, "SELECT competenza as tipoproblema, COUNT(*) as numero_interventi 
-                                                FROM progetto_basi.registrointerventi as r NATURAL JOIN progetto_basi.possiede as p
+                                                FROM basi.registrointerventi as r NATURAL JOIN basi.possiede as p
                                                 GROUP BY tipoproblema")
 
 ggplot(distfreq_type_interv_df, aes(tipoproblema, numero_interventi, fill=tipoproblema)) + 
@@ -86,7 +89,7 @@ ggplot(distfreq_type_interv_df, aes(tipoproblema, numero_interventi, fill=tipopr
 ```{r, echo=FALSE}
 raw_df <- dbGetQuery(connec, "SELECT t1.tecnico, t1.n_interventi
                             FROM (SELECT tecnico, count(*) as n_interventi
-                                FROM progetto_basi.RegistroInterventi as r, progetto_basi.Intervento as i 
+                                FROM basi.RegistroInterventi as r, basi.Intervento as i 
                                 WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
                                 GROUP BY tecnico) t1
                             ORDER BY t1.n_interventi DESC")
@@ -108,11 +111,11 @@ ggplot(distfreq_technician_interv_df, aes(x="", y=n_interventi, fill=tecnico)) +
 
 ```{r, echo=FALSE}
 best_client_df <- dbGetQuery(connec, "SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
-                                        FROM progetto_basi.registrointerventi JOIN progetto_basi.richiesta on npratica = registrointerventi.richiesta
+                                        FROM basi.registrointerventi JOIN basi.richiesta on npratica = registrointerventi.richiesta
                                         WHERE cliente in (
                                                     SELECT cliente
                                                     FROM (SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
-                                                            FROM progetto_basi.registrointerventi JOIN progetto_basi.richiesta on npratica = registrointerventi.richiesta
+                                                            FROM basi.registrointerventi JOIN basi.richiesta on npratica = registrointerventi.richiesta
                                                             GROUP BY (cliente, tipoproblema)
                                                             ORDER BY nInterventi) t1
                                                     GROUP BY (cliente)
