@@ -7,10 +7,10 @@ library("ggplot2")
 
 ```{r, echo=FALSE}
 dsn_database = "postgres"
-dsn_server = "120."
+dsn_server = "127.0.0.1"
 dsn_port = "5433"
 dsn_uid = "postgres"
-dsn_pswd = "postgres"
+dsn_pswd = "Goinbaby17"
 
 tryCatch({
     drv <- dbDriver("PostgreSQL")
@@ -64,9 +64,11 @@ palette <- rep(c("blue", "red", ...), length.out = 36)
 ggplot(interv_dist, aes(x = data, y = numero_interventi, color = as.factor(data), group = 1)) +  
     geom_point() +
     scale_fill_manual(values = palette) +
-    geom_line()
+    geom_line()+
+    theme_bw()+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
-#ggsave(file = "graf.png", width = 15, heigth = 5,dpi = 150)
+ggsave(file = "graf.png", width = 15, heigth = 5,dpi = 150)
 
 ```
 
@@ -128,6 +130,9 @@ best_client_df$cliente <- as.character(best_client_df$cliente)
 array <- paste("cliente", unique(best_client_df$cliente) , sep = "_")
 
 ggplot(best_client_df, aes(fill = tipoproblema, y = ninterventi, x = cliente)) +
-  geom_bar(position='dodge', stat='identity') +
-  scale_x_discrete(labels = array)
+    geom_bar(position='dodge', stat='identity') +
+    scale_x_discrete(labels = array)+
+    theme_bw()+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
 ```
