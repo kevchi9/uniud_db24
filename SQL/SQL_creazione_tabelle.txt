@@ -69,10 +69,7 @@ CONSTRAINT fk_competenza FOREIGN KEY (Competenza)
 );
 
 
-#############################################################################
-### FUNCTION AND TRIGGER 1: UPDATE(+) nInterventi AFTER INSERT Intervento ###
-#############################################################################
-
+-- FUNCTION AND TRIGGER 1: UPDATE(+) nInterventi AFTER INSERT Intervento:
 
 CREATE or REPLACE FUNCTION increase_numeroDiInterventi()
 RETURNS TRIGGER
@@ -95,10 +92,7 @@ for each row
 execute procedure increase_numeroDiInterventi();
 
 
-##############################################################################
-### FUNCTION AND TRIGGER 2: UPDATE(-) nInterventi BEFORE DELETE Intervento ###
-##############################################################################
-
+-- FUNCTION AND TRIGGER 2: UPDATE(-) nInterventi BEFORE DELETE Intervento:
 
 CREATE or REPLACE FUNCTION decrease_numeroDiInterventi()
 RETURNS TRIGGER
@@ -120,9 +114,8 @@ BEFORE DELETE ON Intervento
 for each row
 execute procedure decrease_numeroDiInterventi();
 
-#############################################################################
-###  FUNCTION AND TRIGGER 3: UPDATE(+) nRichieste AFTER INSERT Richiesta  ###
-#############################################################################
+
+--  FUNCTION AND TRIGGER 3: UPDATE(+) nRichieste AFTER INSERT Richiesta :
 
 CREATE OR REPLACE FUNCTION increase_numeroDiRichieste()
 RETURNS TRIGGER
@@ -144,9 +137,8 @@ AFTER INSERT ON Richiesta
 for each row
 execute procedure increase_numeroDiRichieste();
 
-############################################################################
-### FUNCTION AND TRIGGER 4: UPDATE(-) nRichieste BEFORE DELETE Richiesta ###
-############################################################################
+
+-- FUNCTION AND TRIGGER 4: UPDATE(-) nRichieste BEFORE DELETE Richiesta:
 
 CREATE OR REPLACE FUNCTION decrease_numeroDiRichieste()
 RETURNS TRIGGER

@@ -96,11 +96,11 @@ GROUP BY EXTRACT(month FROM data);
 
 # 10 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
 
-SELECT EXTRACT(month FROM data) as mese, 
+SELECT EXTRACT(year FROM data) as anno, 
     count(*) as n_interventi
 FROM intervento 
-GROUP BY mese
-ORDER BY mese;
+GROUP BY anno
+ORDER BY anno;
 
 ####################################################################################
 

@@ -6,7 +6,7 @@ library("ggplot2")
 ```
 
 ```{r, echo=FALSE}
-dsn_database = "basi24"
+dsn_database = "postgres"
 dsn_server = "localhost"
 dsn_port = "5432"
 dsn_uid = "postgres"
@@ -31,21 +31,40 @@ error = function(cond) {
 # Ottieni il numero di interventi per ogni anno
 
 ```{r, echo = FALSE}
+interv_dist <- dbGetQuery(connec, "SELECT EXTRACT(year FROM data) as anno, 
+                                        count(*) as n_interventi
+                                    FROM progetto_basi.intervento 
+                                    GROUP BY anno
+                                    ORDER BY anno")
+
+interv_dist$legend <- factor(interv_dist$anno, levels = c(2019, 2020, 2021))
+
+ggplot(interv_dist, aes(anno, n_interventi, fill=legend)) + 
+    geom_bar(stat="identity") +
+    theme_bw() +
+    theme(text=element_text(size = 17))
+```
+
+# Ottieni il numero di interventi per ogni mese in ordine cronologico
+
+```{r, echo = FALSE}
 intervento_df <- dbGetQuery(connec, "SELECT * FROM progetto_basi.intervento")
 
 intervento_df <- intervento_df[order(intervento_df$data),]
 
 interv_dist <-
     intervento_df %>% 
-    group_by(data = lubridate::floor_date(data, 'year')) %>%
+    group_by(data = lubridate::floor_date(data, 'month')) %>%
     summarize(numero_interventi = n())
 
-interv_dist$data <- format(as.Date(interv_dist$data), "%Y")
+# palette is a set of 36 colors used to color the 36 dots 
+palette <- rep(c("blue", "red", ...), length.out = 36)
 
-ggplot(interv_dist, aes(data, numero_interventi, fill=data)) + 
-    geom_bar(stat="identity") +
-    theme_bw() +
-    theme(text=element_text(size = 17))
+# in order to map values into colors, as.factor(data) is used
+ggplot(interv_dist, aes(x = data, y = numero_interventi, color = as.factor(data), group = 1)) +  
+    geom_point() +
+    scale_fill_manual(values = palette) +
+    geom_line() 
 ```
 
 # Ottieni il numero di interventi per tipo di problema
@@ -65,12 +84,12 @@ ggplot(distfreq_type_interv_df, aes(tipoproblema, numero_interventi, fill=tipopr
 # Ottieni la distribuzione di frequenza degli interventi effettuati dai singoli tecnici nel 2020
 
 ```{r, echo=FALSE}
-raw_df <- dbGetQuery(connec, "SELECT tecnico, n_interventi
-                                                        FROM (SELECT tecnico, count(*) as n_interventi
-                                                            FROM progetto_basi.RegistroInterventi as r, progetto_basi.Intervento as i 
-                                                            WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
-                                                            GROUP BY tecnico)
-                                                        ORDER BY n_interventi DESC")
+raw_df <- dbGetQuery(connec, "SELECT t1.tecnico, t1.n_interventi
+                            FROM (SELECT tecnico, count(*) as n_interventi
+                                FROM progetto_basi.RegistroInterventi as r, progetto_basi.Intervento as i 
+                                WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
+                                GROUP BY tecnico) t1
+                            ORDER BY t1.n_interventi DESC")
 
 distfreq_technician_interv_df <-
     raw_df %>%
@@ -83,4 +102,29 @@ ggplot(distfreq_technician_interv_df, aes(x="", y=n_interventi, fill=tecnico)) +
     geom_text(aes(label = paste0(freq, "%")), position = position_stack(vjust=0.5)) +
     labs(x = NULL, y = NULL, fill = NULL) +
     theme_void()
+```
+
+# Ottieni il numero di intervento per tipo problema dei 5 clienti con più interventi registrati
+
+```{r, echo=FALSE}
+best_client_df <- dbGetQuery(connec, "SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
+                                        FROM progetto_basi.registrointerventi JOIN progetto_basi.richiesta on npratica = registrointerventi.richiesta
+                                        WHERE cliente in (
+                                                    SELECT cliente
+                                                    FROM (SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
+                                                            FROM progetto_basi.registrointerventi JOIN progetto_basi.richiesta on npratica = registrointerventi.richiesta
+                                                            GROUP BY (cliente, tipoproblema)
+                                                            ORDER BY nInterventi) t1
+                                                    GROUP BY (cliente)
+                                                    Order BY (SUM(nInterventi)) DESC
+                                                    LIMIT 5)
+                                            GROUP BY (cliente,tipoproblema);")
+
+
+best_client_df$cliente <- as.character(best_client_df$cliente)
+array <- paste("cliente", unique(best_client_df$cliente) , sep = "_")
+
+ggplot(best_client_df, aes(fill = tipoproblema, y = ninterventi, x = cliente)) +
+  geom_bar(position='dodge', stat='identity') +
+  scale_x_discrete(labels = array)
 ```
