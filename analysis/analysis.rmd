@@ -1,7 +1,6 @@
 ```{r, echo=FALSE}
 library("RPostgreSQL")
 library("tidyverse")
-library("lubridate")
 library("ggplot2")
 ```
 
@@ -53,22 +52,20 @@ ggsave(file=".graphs/interv_years.png", width=3, height=6, dpi=300)
 # 2 # Ottieni il numero di interventi per ogni mese in ordine cronologico
 
 ```{r, echo = FALSE}
-intervento_df <- dbGetQuery(connec, "SELECT * FROM progetto_basi.intervento")
-
-intervento_df <- intervento_df[order(intervento_df$data),]
-
-interv_dist <-
-    intervento_df %>% 
-    group_by(data = lubridate::floor_date(data, 'month')) %>%
-    summarize(numero_interventi = n())
+intervento_df <- dbGetQuery(connec, "SELECT TO_DATE(TO_CHAR(data, 'yyyy-MM-01'), 'YYYY-MM-DD') AS date, COUNT(*) as numero_interventi 
+                                    FROM progetto_basi.intervento
+                                    GROUP BY date
+                                    ORDER BY date") ;
 
 # palette is a set of 36 colors used to color the 36 dots 
 palette <- rep(c("blue", "red", ...), length.out = 36)
 
-Legenda <- as.factor(interv_dist$data)
+Legenda <- as.factor(intervento_df$date)
+
+print(Legenda)
 
 # in order to map values into colors, as.factor(data) is used
-ggplot(interv_dist, aes(x = data, y = numero_interventi, color = Legenda, group = 1)) +
+ggplot(intervento_df, aes(x = date, y = numero_interventi, color = Legenda, group = 1)) +
     geom_point() +
     scale_fill_manual(values = palette) +
     geom_line() +

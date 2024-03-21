@@ -13,8 +13,32 @@
 \usepackage{tabularx}
 \usepackage{subcaption}
 \usepackage{hyperref} % Per rendere l'indice interagibile
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[export]{adjustbox}
 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{darkgreen}{rgb}{0.00,0.60,0.20}
 
+\lstdefinestyle{SQL_CODE}{
+  backgroundcolor=\color{backcolour}, commentstyle=\color{codegreen},
+  keywordstyle=\color{darkgreen},
+  numberstyle=\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=4
+}
 
 \title{Relazione progetto di laboratorio \\ Basi di dati - A.A. 2023/2024}
 
@@ -28,10 +52,9 @@
 	{ndoye.ibrahime@spes.uniud.it}
 	\and
 	Moreno Scozzi\ -
-	\texttt{153007}\ -
+	\texttt{150356}\ -
 	{scozzi.moreno@spes.uniud.it}
 	}
-
 
 \begin{document}
 \setlength{\parindent}{25pt}
@@ -39,19 +62,28 @@
 \graphicspath{{./img/}}
 \maketitle
 {
+    \centering\href{https://github.com/kevchi9/uniud_db24}{GitHub Repository}
     \newpage
     \hypersetup{linkcolor=black}
     \tableofcontents
+
 }
 
 \newpage
 
 \section{Introduzione}
-
 Il presente elaborato espone l’attività di progettazione e implementazione di una Base di Dati relazionale, con una
 successiva analisi dei dati sperimentali in essa contenuti tramite apposite interrogazioni in linguaggio SQL. \\
 Di seguito elencheremo i file creati durante lo sviluppo del progetto per la creazione di database. \\
 
+\subsection{File prodotti}
+Tutto l'elaborato è stato caricato all'interno della \href{https://github.com/kevchi9/uniud_db24/}{repository github} appositamente creata per lo sviluppo di questo progetto.
+
+\subsection{Scelte implementative}
+Durante lo sviluppo sono stati usati diversi linguaggi tra cui SQL per la definizione e interrogazione delle tabelle, Python per il popolamento delle tabelle e R per la produzione di grafici.
+
+\subsection{Scope del documento}
+Lo scope principale di questo documento è quello di mostrare le fasi della progettazione di una base di dati, con un focus particolare sulla parte di analisi dei requisiti e progettazione logica. \textbf{Non} verranno trattati nel dettaglio gli argomenti del popolamento della base di dati (dunque lo sviluppo degli script Python) e dello sviluppo del codice R per la produzione dei grafici (ne verranno mostrati solo degli estratti). 
 \section{Analisi dei requisiti}
 
 \subsection{Requisiti}
@@ -76,7 +108,6 @@ Si vuole progettare una base di dati di supporto alla gestione degli interventi 
 }
 
 Il \textbf{dominio applicativo} della base di dati è l'\textbf{azienda} di impianti di riscaldamento.
-
 
 \subsection{Glossario}
 
@@ -161,8 +192,6 @@ In seguito all'identificazione dei termini chiave, si raccolgono i requisiti esp
 Individuati i requisiti, si descrivono ora le principali operazioni sui dati, con la rispettiva frequenza.
 Si ipotizza, per dare consistenza al conteggio, un'azienda con 100 clienti attivi, 5 tecnici e una stima di 20 guasti mensili con conseguenti richieste di interventi.
 
-\textbf{TODO: AGGIUNGERE OPERAZIONI MAN MANO CHE SE NE SCOPRONO}
-
 \begin{table}[h]
     \centering
     \begin{tabular}{|m{10cm} m{3cm}|}
@@ -203,11 +232,10 @@ Segue lo schema Entità-Relazione creato sulla base dei requisiti definiti prece
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.25]{img/ER_base.png}
-    \label{fig:ER_Schema}
+    \includegraphics[scale=0.25]{img/ER_base_definitivo.png}
+    \label{fig:ER_Schema1}
 \end{figure}
 
-\subsection{Vincoli}
     \subsubsection{Vincoli di integrità}
     Dalla consegna si evince un evidente vincolo di integrità \textbf{tra le entità Tecnico e Richiesta}: \\ al momento dell'inserimento di una richiesta, il cliente inserisce anche il \textbf{tipo ti problema} da risolvere. Tale campo può essere inserito con un insieme specifico di valori (ad esempio: \{elettrico, idraulico, ... \}), il quale è anche il \textbf{dominio del attributo 'campo competenze' di Tecnico}. \\ Dunque affinchè un intervento possa essere assegnato a uno specifico tecnico, \textbf{campo competenze di Tecnico e tipo problema di Richiesta devono combaciare}.
     
@@ -222,10 +250,10 @@ Segue lo schema Entità-Relazione creato sulla base dei requisiti definiti prece
     \end{enumerate}
 
 \subsection{Alcune osservazioni}
-Sulla base delle specifiche dei requisiti, si evince che Intervento (entità debole) identificata univocamente da un numero sequenziale e dalla richiesta che lo ha fornito. Dunque la chiave primaria di intervento sarà proprio la coppia n.intervento, Richiesta.
-
+Sulla base delle specifiche dei requisiti, si evince che Intervento è identificato univocamente da un numero sequenziale e dalla richiesta che lo ha fornito, e di conseguenza è un \textbf{entità debole}. Dunque la chiave primaria di intervento sarà proprio la coppia n.intervento, Richiesta.
 
 \section{Progettazione logica}
+Lo scopo di questa sezione è di produrre uno schema relazionale, sulla base dello schema entità-relazione precedentemente definito. In primo luogo verrà effettuata un'analisi delle ridondanze, e in seguito una ristesura dello schema ER in preparazione allo schema relazione.
 
 \subsection{Analisi delle ridondanze}
 Al fine di decidere se mantenere o eliminare le ridondanze presenti nello schema Entità-Relazione proposto in precedenza, si definisce la tavola dei volumi di entità e relazioni.
@@ -255,7 +283,7 @@ Consideriamo il caso della base di dati \underline{\textbf{dopo 3 anni di attivi
         \end{tabular}
     \end{adjustbox}
     \caption{Volume dei dati}
-    \label{tab:volumedati}
+    \label{tab:volumetable}
 \end{table}
 
 \subsubsection{Attributi derivabili}
@@ -275,7 +303,7 @@ La ridondanza introdotta dall'attributo Numero di Richiesta coinvolge principalm
 
 \subsubsection{Tabelle degli accessi}
 
-Si producono le tabelle degli accessi delle operazioni indicate nel punto 4.2 con e senza ridondanza.
+Si producono le tabelle degli accessi delle operazioni sopracitate con e senza ridondanza.
 
 \textbf{Con ridondanza}
 
@@ -297,7 +325,7 @@ Si producono le tabelle degli accessi delle operazioni indicate nel punto 4.2 co
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per "Inserimento di una Richiesta" }
-    \label{tab:accesstable}
+    \label{tab:accesstable1}
 \end{table}
 
 \begin{table}[h]
@@ -312,7 +340,7 @@ Si producono le tabelle degli accessi delle operazioni indicate nel punto 4.2 co
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per "Visualizzazione dei dettagli di un Cliente"}
-    \label{tab:accesstable}
+    \label{tab:accesstable2}
 \end{table}
 
 \textbf{Senza ridondanza}
@@ -331,7 +359,7 @@ Si producono le tabelle degli accessi delle operazioni indicate nel punto 4.2 co
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per "Inserimento di una Richiesta" }
-    \label{tab:accesstable}
+    \label{tab:accesstable3}
 \end{table}
 
 \begin{table}[h!]
@@ -348,7 +376,7 @@ Si producono le tabelle degli accessi delle operazioni indicate nel punto 4.2 co
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per "Visualizzazione dei dettagli di un Cliente"}
-    \label{tab:accesstable}
+    \label{tab:accesstable4}
 \end{table}
 
 \subsubsection{Analisi dei costi mensili}
@@ -403,7 +431,7 @@ In seguito le tabelle degli accessi per le operazioni sopracitate con e senza ri
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per Inserimento di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable5}
 \end{table}
 
 \begin{table}[h]
@@ -418,7 +446,7 @@ In seguito le tabelle degli accessi per le operazioni sopracitate con e senza ri
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per Visualizzazione dei dettagli di una Richiesta}
-    \label{tab:accesstable}
+    \label{tab:accesstable6}
 \end{table}
 
 \textbf{Senza ridondanza}
@@ -437,7 +465,7 @@ In seguito le tabelle degli accessi per le operazioni sopracitate con e senza ri
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per Inserimento di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable7}
 \end{table}
 
 \begin{table}[h!]
@@ -454,7 +482,7 @@ In seguito le tabelle degli accessi per le operazioni sopracitate con e senza ri
         \end{tabular}
     \end{adjustbox}
     \caption{Tabella degli accessi per Visualizzazione dei dettagli di una Richiesta}
-    \label{tab:accesstable}
+    \label{tab:accesstable8}
 \end{table}
 
 \subsubsection{Analisi dei costi mensili}
@@ -516,7 +544,7 @@ Per chiarezza si aggiunge alla tabella degli accessi una colonna per discriminar
             \end{tabular}
         \end{adjustbox}
     \caption{Tabella degli accessi per Inserimento di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable9}
 \end{table}
 
 \begin{table}[h]
@@ -531,7 +559,7 @@ Per chiarezza si aggiunge alla tabella degli accessi una colonna per discriminar
             \end{tabular}
         \end{adjustbox}
     \caption{Tabella degli accessi per Visualizzazione dei dettagli di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable10}
 \end{table}
 
 \textbf{Senza ridondanza}
@@ -550,7 +578,7 @@ Per chiarezza si aggiunge alla tabella degli accessi una colonna per discriminar
             \end{tabular}
         \end{adjustbox}
     \caption{Tabella degli accessi per Inserimento di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable11}
 \end{table}
 
 \begin{table}[h!]
@@ -573,7 +601,7 @@ Per chiarezza si aggiunge alla tabella degli accessi una colonna per discriminar
             \end{tabular}
         \end{adjustbox}
     \caption{Tabella degli accessi per Visualizzazione dei dettagli di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable12}
 \end{table}
 
 \subsubsection{Analisi dei costi mensili}
@@ -625,7 +653,7 @@ Poichè il controllo del campo competenze viene effettuato sia con presenza di r
             \end{tabular}
         \end{adjustbox}
     \caption{Tabella degli accessi per Inserimento di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable13}
 \end{table}
 
 La seconda modifica dell'attributo (disponibile=True) avviene quando l'Intervento è terminato.
@@ -648,7 +676,7 @@ La seconda modifica dell'attributo (disponibile=True) avviene quando l'Intervent
             \end{tabular}
         \end{adjustbox}
     \caption{Tabella degli accessi per Inserimento di un Intervento}
-    \label{tab:accesstable}
+    \label{tab:accesstable14}
 \end{table}
 
 \subsubsection{Analisi dei costi mensili}
@@ -704,8 +732,8 @@ Nel diagramma è presente un attributo multivalore: Campo competenze di Tecnico.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.25]{img/ER_FINALE.png}
-    \label{fig:ER_Schema}
+    \includegraphics[scale=0.22]{img/ER_FINALE.png}
+    \label{fig:ER_Schema2}
 \end{figure}
 
 \subsection{Traduzione dello schema ER in schema relazionale}
@@ -758,25 +786,345 @@ Anche in questo caso si danno per scontati i vincoli Unique e NotNull sulle \und
 \end{itemize}
 
 \subsubsection{Osservazioni}
-Il vincolo di integrità indicato al punto 3.2.1, è codificato attraverso il vincolo di chiave esterna di TipoProblema in Richiesta (TipoProblema sarà dunque nello stesso dominio di Competenza).
+Il vincolo di integrità indicato al punto 3.1.1, è codificato attraverso il vincolo di chiave esterna di TipoProblema in Richiesta (TipoProblema sarà dunque nello stesso dominio di Competenza).
 
 \subsection{Schema Relazionale}
 
 \begin{figure}[h!]
     \centering
     \includegraphics[scale=0.2]{img/schema_relazionale.png}
-    \label{fig:ER_Schema}
+    \label{fig:ER_Schema3}
 \end{figure}
 
+\newpage
 \section{Progettazione fisica}
 
 In questa sezione verrà discussa l'implementazione in Postgres SQL del sistema progettato nei punti precedenti.
+Sulla base di quanto prodotto in fase di progettazione logica 
 
 \subsubsection{Definizione delle tabelle}
 
+Le prime tabelle definite sono quelle prive di chiavi esterne, dunque Cliente, Tecnico e Competenza.
+
+\lstset{style=SQL_CODE}
+
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Cliente(
+ID int NOT NULL PRIMARY KEY,
+Indirizzo varchar(20) NOT NULL,
+Tel bigint NOT NULL,
+PersonaDiRiferimento varchar(20),
+NumeroDiRichieste int NOT NULL);
+
+CREATE TABLE Tecnico(
+CF varchar(16) PRIMARY KEY);
+
+CREATE TABLE Competenza(
+Campo varchar(20) PRIMARY KEY);
+\end{lstlisting}
+
+Seguono ora le tabelle contenenti chiavi esterne. Per garantire l'integrità dei dati, si usa l'opzione cascade sia sugli aggiornamenti che sulle cancellazioni. Per questo motivo, sono stati anche implementati dei trigger per l'aggiornamento in caso di cancellazione degli attributi derivati definiti in precedenza.\\
+Tabella Richiesta:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Richiesta(
+nPratica int PRIMARY KEY,
+TipoProblema varchar(20) NOT NULL,
+Cliente int NOT NULL,
+SistemaInteressato varchar(20) NOT NULL,
+NumeroDiInterventi int NOT NULL,
+CONSTRAINT fk_tipoProblema FOREIGN KEY (TipoProblema) 
+	REFERENCES Competenza(Campo) 
+	ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT fk_cliente FOREIGN KEY (Cliente) 
+	REFERENCES Cliente(ID)
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+\end{lstlisting}
+Tabella Intervento:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Intervento(
+Richiesta int NOT NULL,
+nIntervento int NOT NULL,
+Data DATE NOT NULL,
+Durata interval NOT NULL,
+TelCliente bigint,
+PRIMARY KEY(Richiesta, nIntervento),
+CONSTRAINT fk_richiesta FOREIGN KEY (Richiesta) 
+	REFERENCES Richiesta(nPratica)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
+\end{lstlisting}
+Tabella RegistroInterventi:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE RegistroInterventi(
+Tecnico varchar(16) NOT NULL,
+Richiesta int NOT NULL,
+Intervento int NOT NULL,
+PRIMARY KEY (Tecnico, Richiesta, Intervento),
+CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico) 
+	REFERENCES Tecnico(CF)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE,
+CONSTRAINT fk_richiesta_intervento FOREIGN KEY (Richiesta, Intervento) 
+	REFERENCES Intervento(Richiesta, nIntervento)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
+\end{lstlisting}
+
+\newpage
+Tabella Possiede:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Possiede(
+Tecnico varchar(16) NOT NULL,
+Competenza varchar(20) NOT NULL,
+PRIMARY KEY (Tecnico, Competenza),
+CONSTRAINT fk_tecnico FOREIGN KEY (Tecnico)
+	REFERENCES Tecnico(CF)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE,
+CONSTRAINT fk_competenza FOREIGN KEY (Competenza)
+	REFERENCES Competenza(Campo)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE
+);
+\end{lstlisting}
+
 \subsubsection{Definizione dei trigger}
 
+Per l'implementazione degli attributi derivati sono stati creati 4 trigger e 4 funzioni: \newline 
+2 per incrementare gli attributi NumeroDiRichieste e NumeroDiInterventi in seguito a un inserimento e 
+2 per decrementarli in caso di cancellazione.
 
 
+
+\begin{lstlisting}[language=SQL]
+##############################################################################
+###                                                                        ###
+### FUNCTION AND TRIGGER 1: UPDATE(+) nInterventi AFTER INSERT Intervento  ###
+###                                                                        ###
+##############################################################################
+
+CREATE or REPLACE FUNCTION increase_numeroDiInterventi()
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare
+	newValue integer;
+
+	begin
+	newValue := (SELECT (NumeroDiInterventi + 1) FROM Richiesta WHERE nPratica = new.Richiesta);
+	UPDATE Richiesta SET NumeroDiInterventi = newValue WHERE nPratica = new.Richiesta;
+	return new;
+	end;
+$$;
+
+CREATE TRIGGER increase_counter
+AFTER INSERT ON Intervento
+for each row
+execute procedure increase_numeroDiInterventi();
+
+##############################################################################
+###                                                                        ###
+### FUNCTION AND TRIGGER 2: UPDATE(-) nInterventi BEFORE DELETE Intervento ###
+###                                                                        ###
+##############################################################################
+
+CREATE or REPLACE FUNCTION decrease_numeroDiInterventi()
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare
+	newValue integer;
+
+	begin
+	newValue := (SELECT (NumeroDiInterventi - 1) FROM Richiesta WHERE nPratica = old.Richiesta);
+	UPDATE Richiesta SET NumeroDiInterventi = newValue WHERE nPratica = old.Richiesta;
+	return old;
+	end;
+$$;
+
+CREATE TRIGGER decrease_counter
+AFTER DELETE ON Intervento
+for each row
+execute procedure decrease_numeroDiInterventi();
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL]
+#############################################################################
+###                                                                       ###
+###  FUNCTION AND TRIGGER 3: UPDATE(+) nRichieste AFTER INSERT Richiesta  ###
+###                                                                       ###
+#############################################################################
+
+CREATE OR REPLACE FUNCTION increase_numeroDiRichieste()
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare 
+	newValue integer;
+
+	begin
+	newValue := (SELECT (NumeroDiRichieste + 1) FROM Cliente WHERE ID = new.Cliente);
+	UPDATE Cliente SET NumeroDiRichieste = newValue WHERE ID = new.Cliente;
+	return new;
+	end;
+$$;
+
+CREATE TRIGGER increase_counter
+AFTER INSERT ON Richiesta
+for each row
+execute procedure increase_numeroDiRichieste();
+
+#############################################################################
+###                                                                       ###
+### FUNCTION AND TRIGGER 4: UPDATE(-) nRichieste BEFORE DELETE Richiesta  ###
+###                                                                       ###
+#############################################################################
+
+CREATE OR REPLACE FUNCTION decrease_numeroDiRichieste()
+RETURNS TRIGGER
+language plpgsql
+as $$
+
+	declare 
+	newValue integer;
+
+	begin
+	newValue := (SELECT (NumeroDiRichieste - 1) FROM Cliente WHERE ID = old.Cliente);
+	UPDATE Cliente SET NumeroDiRichieste = newValue WHERE ID = old.Cliente;
+	return old;
+	end;
+$$;
+
+CREATE TRIGGER decrease_counter
+BEFORE DELETE ON Richiesta
+for each row
+execute procedure decrease_numeroDiRichieste();
+\end{lstlisting}
+
+\subsection{Popolamento delle tabelle tramite script Python}
+
+Al fine di poter manipolare e controllare al meglio i campioni da inserire nelle tabelle, sono stati implementati degli script Python. L'output ottenuto da tali script consiste in alcuni file di testo, convertibili in file .sql, contenenti comandi SQL per il popolamento della base di dati.\\ Gli script non vengono inseriti in questo documento poichè out-of-scope ma sono disponibili sulla\\ \href{https://github.com/kevchi9/uniud\_db24}{repository github}, all'interno della cartella data. \\Nella cartella SQL si trovano invece i comandi SQL illustrati nel punto precedente, e delle query usate come spunto per l'analisi dei dati.
+
+\newpage
+
+\section{Analisi dei dati}
+
+L'analisi dei dati illustrata in questo capitolo è stata effettuata su una base di dati avente \textbf{1000 clienti}, \textbf{2000 richieste} con \textbf{massimo 3 interventi l'una} e \textbf{15 tecnici} aventi ognuno \textbf{massimo 2 competenze}. Per l'analisi è stato usato R con le seguenti librerie:
+\begin{itemize}
+    \item \textbf{RPostgreSQL} per interfacciarsi al DB postgreSQL 
+    \item \textbf{tidyverse} per varie funzionalità utili alla manipolazione dei dati
+    \item \textbf{ggplot2} per la creazione dei grafici
+\end{itemize}
+Il codice completo per generare i grafici presenti in questa sezione si trova nel file "analysis/analysis.rmd" nella \href{https://github.com/kevchi9/uniud\_db24}{repository github}, in questo documento ne verranno mostrati solo alcuni estratti. 
+
+\subsection{Grafici e query}
+
+Il primo grafico mostra le frequenze assolute degli interventi mese per mese in 3 anni di attività.\\
+La query usata per ricavare i dati è semplice, ed è la seguente :
+\begin{lstlisting}[language=SQL]
+SELECT TO_DATE(TO_CHAR(data, 'yyyy-MM-01'), 'YYYY-MM-DD') AS date,
+COUNT(*) AS numero_interventi 
+FROM intervento
+GROUP BY date
+ORDER BY date;
+\end{lstlisting}
+Nella query viene utilizzato un typecast a stringa sulla data, per arrotondare tutte le date al primo giorno del mese, in modo da poter raggruppare i dati in maniera più semplice.
+\begin{figure}[h!]
+    \includegraphics[scale=0.45]{analysis/graphs/interv_months.png}
+    \label{fig:data_analysis1}
+    \caption{Frequenze assolute degli interventi in 3 anni, mese per mese.}
+\end{figure}
+
+Si hanno valori nel range [92, 124] con un valore medio pari a 110. 
+\newpage
+\subsubsection{Raggruppamenti}
+
+Seguono alcuni grafici ottenuti tramite il raggruppamento di dati secondo determinati parametri.
+Per esempio, il grafico "a" (Figura 2) raggruppa le frequenze assolute per anno, sommando tutti gli interventi dei mesi appartenenti allo stesso anno.\\
+La query usata per ricavare i dati è la seguente:
+\begin{lstlisting}[language=SQL]
+SELECT EXTRACT(YEAR FROM data) AS anno, 
+    COUNT(*) AS n_interventi
+FROM intervento 
+GROUP BY anno
+ORDER BY anno;
+\end{lstlisting}
+Il grafico "b" (Figura 2) invece raggruppa le frequenze assolute di tutti gli interventi per tipo di problema:
+\begin{lstlisting}[language=SQL]
+SELECT competenza, COUNT(*) AS numero_interventi 
+FROM registrointerventi NATURAL JOIN possiede
+GROUP BY competenza;
+\end{lstlisting}
+\begin{figure}[H]
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[scale=0.65]{analysis/graphs/interv_years.png}
+        \label{fig:data_analysis2}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[scale = 0.46]{analysis/graphs/interv_problemtype.png}
+        \label{fig:data_analysis3}
+    \end{subfigure}
+    \caption{Distribuzione degli interventi anno per anno (a) e per tipologia di problema (b)}
+    \label{fig:combined}
+\end{figure}
+Il grafico a torta (Figura 3) mostra le \textbf{frequenze percentuali} (frequenze relative * 100) degli interventi per ogni tecnico nel 2020. La query usata per ricavare i dati è la seguente:
+\begin{lstlisting}[language=SQL]
+SELECT t1.tecnico, t1.n_interventi
+FROM (SELECT tecnico, COUNT(*) AS n_interventi
+    FROM RegistroInterventi AS r, Intervento AS i 
+    WHERE r.richiesta = i.richiesta AND r.intervento = i.nintervento AND i.data > '2020-1-1' AND i.data < '2021-1-1'
+    GROUP BY tecnico) t1
+ORDER BY t1.n_interventi DESC;
+\end{lstlisting}
+\newpage
+In questo caso la manipolazione dei dati è stata fatta in R, nello specifico, alla tabella risultante dalla query viene aggiunta una colonna per la frequenza percentuale che viene ottenuta dalla formula a riga 3. \\ Infine, nell'ultima riga viene effettuato un arrotondamento a 3 valori decimali dal momento che di default, in R, le divisioni ne restituiscono molti.
+\begin{lstlisting}[language=R]
+distfreq_technician_interv_df <-
+    raw_df %>%
+    mutate(freq = (n_interventi / sum(raw_df$n_interventi)) * 100) %>%
+    mutate(across(where(is.numeric), ~ round(., 3)))
+\end{lstlisting}
+\begin{figure}[h!]
+    \includegraphics[scale = 0.3]{analysis/graphs/percent_interv_tech.png}
+    \label{fig:data_analysis4}
+    \caption{Frequenze percentuali degli interventi per Tecnico}
+\end{figure}
+N.B.: la legenda distingue i tecnici dal loro codice fiscale.\\
+Infine abbiamo nel grafico a barre (Figura 4) un ulteriore raggruppamento, più complesso dei precedenti.
+La query usata per ricavare i dati è la seguente:
+\begin{lstlisting}[language=SQL]
+SELECT cliente, tipoproblema, COUNT(*) AS nInterventi 
+FROM registrointerventi JOIN richiesta ON npratica = registrointerventi.richiesta
+WHERE cliente IN (
+    SELECT cliente
+    FROM (SELECT cliente, tipoproblema, COUNT(*) AS nInterventi 
+        FROM registrointerventi JOIN richiesta on npratica = registrointerventi.richiesta
+        GROUP BY (cliente, tipoproblema)
+        ORDER BY nInterventi) t1
+    GROUP BY (cliente)
+    ORDER BY (SUM(nInterventi)) DESC
+    LIMIT 5)
+GROUP BY (cliente,tipoproblema);
+\end{lstlisting}
+La query contiene 2 query annidate:
+\begin{itemize}
+    \item QUERY 1 (da riga 5 a riga 8): da questa query si ottiene una tabella contenente la sommatoria degli interventi raggruppati per cliente e tipo di problema.
+    \item QUERY 2 (da riga 4 a riga 11): a partire dalla tabella prodotta dalla query precedente, trova i 5 clienti con la somma degli interventi più alta (a questo punto non più divisi per tipo di problema).
+\end{itemize}
+La query esterna è uguale alla query 1, ma sfrutta l'output della query 2 per selezionare solo i clienti interessati. In questo grafico le colonne rappresentano i 5 clienti che hanno richiesto il numero più elevato di interventi, e le colonne distinguono verticalmente, tramite i colori, gli interventi per tipo di problema.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale = 0.15]{analysis/graphs/top_5_clients.jpg}
+    \label{fig:data_analysis5}
+    \caption{Distribuzione degli interventi per tipo di problema nei top 5 clienti}
+\end{figure}
+
+\section{Conclusioni}
+Data la pseudo-casualità dei dati, non si osservano particolari caratteristiche nei dati.
 \end{document}
-
