@@ -6,13 +6,13 @@ library("ggplot2")
 ```
 
 ```{r, echo=FALSE}
-dsn_database = "postgres"
-dsn_server = "localhost"
-dsn_port = "5432"
-dsn_uid = "postgres"
-dsn_pswd = "postgres"
+dsn_database = "basi24"     # set your db name here
+dsn_server = "localhost"    # set the db server here
+dsn_port = "5432"           # set the server listening port here
+dsn_uid = "postgres"        # set the user id here
+dsn_pswd = "postgres"       # set the user password here
 
-tryCatch({
+tryCatch({                  
     drv <- dbDriver("PostgreSQL")
     print("Connecting to Database...")
     connec <- dbConnect(drv,
@@ -28,7 +28,7 @@ error = function(cond) {
 })
 ```
 
-# Ottieni il numero di interventi per ogni anno
+# 1 # Ottieni il numero di interventi per ogni anno
 
 ```{r, echo = FALSE}
 interv_dist <- dbGetQuery(connec, "SELECT EXTRACT(year FROM data) as anno, 
@@ -47,10 +47,10 @@ ggplot(interv_dist, aes(anno, n_interventi, fill=legend)) +
     theme_bw() +
     theme(text=element_text(size = 12))
 
-ggsave(file=".graphs/interv_years.png", width=5, height=8, dpi=300)
+ggsave(file=".graphs/interv_years.png", width=3, height=6, dpi=300)
 ```
 
-# Ottieni il numero di interventi per ogni mese in ordine cronologico
+# 2 # Ottieni il numero di interventi per ogni mese in ordine cronologico
 
 ```{r, echo = FALSE}
 intervento_df <- dbGetQuery(connec, "SELECT * FROM progetto_basi.intervento")
@@ -80,7 +80,7 @@ ggplot(interv_dist, aes(x = data, y = numero_interventi, color = Legenda, group 
 ggsave(file=".graphs/interv_months.png", width=15, height=5, dpi=300)
 ```
 
-# Ottieni il numero di interventi per tipo di problema
+# 3 # Ottieni il numero di interventi per tipo di problema
 
 ```{r, echo=FALSE}
 distfreq_type_interv_df <- dbGetQuery(connec, "SELECT competenza as tipoproblema, COUNT(*) as numero_interventi 
@@ -93,12 +93,12 @@ ggplot(distfreq_type_interv_df, aes(tipoproblema, numero_interventi, fill=tipopr
     xlab("Tipo di problema") +
     ylab("Interventi") +
     theme_bw() +
-    theme(text=element_text(size = 12))
+    theme(text=element_text(size = 14))
 
-ggsave(file=".graphs/interv_problemtype.png", width=7, height=10, dpi=300)
+ggsave(file=".graphs/interv_problemtype.png", width=8, height=10, dpi=300)
 ```
 
-# Ottieni la distribuzione di frequenza degli interventi effettuati dai singoli tecnici nel 2020
+# 4 # Ottieni la distribuzione di frequenza degli interventi effettuati dai singoli tecnici nel 2020
 
 ```{r, echo=FALSE}
 raw_df <- dbGetQuery(connec, "SELECT t1.tecnico, t1.n_interventi
@@ -125,7 +125,7 @@ ggplot(distfreq_technician_interv_df, aes(x="", y=n_interventi, fill=tecnico)) +
 ggsave(file=".graphs/percent_interv_tech.jpg", width=13, height=10, dpi=300)
 ```
 
-# Ottieni il numero di intervento per tipo problema dei 5 clienti con più interventi registrati
+# 5 # Ottieni il numero di intervento per tipo problema dei 5 clienti con più interventi registrati
 
 ```{r, echo=FALSE}
 best_client_df <- dbGetQuery(connec, "SELECT cliente, tipoproblema, COUNT(*) as nInterventi 
@@ -152,9 +152,9 @@ ggplot(best_client_df, aes(fill = tipoproblema, y = ninterventi, x = cliente)) +
     ylab("Interventi") +
     guides(fill=guide_legend(title="Tipo di problema")) +
     scale_x_discrete(labels = array) +
-    theme(text=element_text(size = 12))
+    theme(text=element_text(size = 14))
 
-ggsave(file=".graphs/top_5_clients.jpg", width=8, height=11, dpi=300)
+ggsave(file=".graphs/top_5_clients.jpg", width=8, height=8, dpi=300)
 ```
 
 ```{r, echo=FALSE}

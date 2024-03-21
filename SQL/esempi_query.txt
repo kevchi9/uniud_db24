@@ -85,7 +85,7 @@ ORDER BY n_interventi DESC;
 
 ####################################################################################
 
-# 9 # Ottieni il numero di interventi per ciascun anno dal 2019 al 2022 ### 
+# 9 # Ottieni il numero di interventi per ciascun mese dal 2019 al 2022 ### 
 
 SELECT EXTRACT(year FROM data) as anno, 
     count(*) as n_interventi
